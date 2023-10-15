@@ -22,6 +22,7 @@ to generate this file without the comments in this block.
   , "exceptions"
   , "foldable-traversable"
   , "identity"
+  , "integers"
   , "invariant"
   , "lists"
   , "maybe"

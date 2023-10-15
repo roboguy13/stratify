@@ -23,7 +23,11 @@ import Stratify.Syntax.Core.Term
 import Stratify.Eval.NbE
 import Stratify.Syntax.Name
 import Stratify.Ppr
+import Stratify.Syntax.Parser.Core
 
+import Parsing (runParser)
+
+import Data.Either
 import Data.Maybe (Maybe(..))
 
 main :: Effect Unit
@@ -46,10 +50,16 @@ onClick inputArea outputArea event =
     Nothing -> pure unit
     Just _ -> do
       inputVal <- TextAreaElement.value inputArea
+      case runParser inputVal parseTerm of
+        Left e -> TextAreaElement.setValue ("Parse error: " <> show e) outputArea
+        Right parsed ->
+          case nf (fromNamed parsed) of
+            Left e -> TextAreaElement.setValue ("Evaluation error: " <> show e) outputArea
+            Right r -> TextAreaElement.setValue (ppr r) outputArea
       -- TextAreaElement.setValue (ppr' (eval))
-      case inputVal of
-        ":quit" -> TextAreaElement.setValue "Goodbye!" outputArea
-        _      -> TextAreaElement.setValue ("You typed: " <> inputVal) outputArea
+      -- case inputVal of
+      --   ":quit" -> TextAreaElement.setValue "Goodbye!" outputArea
+      --   _      -> TextAreaElement.setValue ("You typed: " <> inputVal) outputArea
 
 fromJust :: forall a. String -> Maybe a -> a
 fromJust _ (Just x) = x
