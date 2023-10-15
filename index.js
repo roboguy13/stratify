@@ -26856,7 +26856,7 @@
         return v.value0;
       }
       ;
-      throw new Error("Failed pattern match at Stratify.Syntax.Parser.Core (line 69, column 13 - line 71, column 28): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Stratify.Syntax.Parser.Core (line 88, column 13 - line 90, column 28): " + [v.constructor.name]);
     };
     return lexeme(map11(function($23) {
       return IntLit.create(go2($23));
@@ -26874,6 +26874,12 @@
   var parseBool = /* @__PURE__ */ function() {
     return lexeme(alt6(voidLeft4(keyword("True"))(new BoolLit(true)))(voidLeft4(keyword("False"))(new BoolLit(false))));
   }();
+  var parseBoolType = /* @__PURE__ */ function() {
+    return voidLeft4(keyword("Bool"))(BoolType.value);
+  }();
+  var parseIntType = /* @__PURE__ */ function() {
+    return voidLeft4(keyword("Int"))(IntType.value);
+  }();
   var identifier = /* @__PURE__ */ function() {
     return tokenParser.identifier;
   }();
@@ -26890,8 +26896,8 @@
   };
   var $lazy_parseApp = /* @__PURE__ */ $runtime_lazy5("parseApp", "Stratify.Syntax.Parser.Core", function() {
     return defer4(function(v) {
-      return bind6($lazy_parseTerm$prime(61))(function(f) {
-        return bind6(some4($lazy_parseTerm$prime(62)))(function(args) {
+      return bind6($lazy_parseTerm$prime(80))(function(f) {
+        return bind6(some4($lazy_parseTerm$prime(81)))(function(args) {
           return pure6(foldl4(App2.create)(f)(args));
         });
       });
@@ -26899,11 +26905,11 @@
   });
   var $lazy_parseIf = /* @__PURE__ */ $runtime_lazy5("parseIf", "Stratify.Syntax.Parser.Core", function() {
     return lexeme(bind6(keyword("if"))(function() {
-      return bind6($lazy_parseTerm(81))(function(x) {
+      return bind6($lazy_parseTerm(100))(function(x) {
         return bind6(keyword("then"))(function() {
-          return bind6($lazy_parseTerm(83))(function(y) {
+          return bind6($lazy_parseTerm(102))(function(y) {
             return bind6(keyword("else"))(function() {
-              return bind6($lazy_parseTerm(85))(function(z) {
+              return bind6($lazy_parseTerm(104))(function(z) {
                 return pure6(new If(x, y, z));
               });
             });
@@ -26911,6 +26917,21 @@
         });
       });
     }));
+  });
+  var $lazy_parseLam = /* @__PURE__ */ $runtime_lazy5("parseLam", "Stratify.Syntax.Parser.Core", function() {
+    return bind6(symbol("\\"))(function() {
+      return bind6(identifier)(function(x) {
+        return bind6(symbol(":"))(function() {
+          return bind6($lazy_parseTerm(73))(function(ty) {
+            return bind6(symbol("."))(function() {
+              return bind6($lazy_parseTerm(75))(function(body) {
+                return pure6(new Lam(x, ty, body));
+              });
+            });
+          });
+        });
+      });
+    });
   });
   var $lazy_parseOp = /* @__PURE__ */ $runtime_lazy5("parseOp", "Stratify.Syntax.Parser.Core", function() {
     var theOp = function(v) {
@@ -26922,26 +26943,26 @@
         }(v($24));
       };
     };
-    return lexeme(buildExprParser([[binaryN("==")(theOp(Equal.create)), binaryN("<")(theOp(Lt.create))], [binaryLeft("&&")(theOp(And.create)), binaryLeft("||")(theOp(Or.create))], [binaryLeft("*")(theOp(Mul.create)), binaryLeft("/")(theOp(Div.create)), binaryLeft("+")(theOp(Add.create)), binaryLeft("-")(theOp(Sub.create))]])($lazy_parseTerm0(103)));
+    return lexeme(buildExprParser([[binaryN("==")(theOp(Equal.create)), binaryN("<")(theOp(Lt.create))], [binaryLeft("&&")(theOp(And.create)), binaryLeft("||")(theOp(Or.create))], [binaryLeft("*")(theOp(Mul.create)), binaryLeft("/")(theOp(Div.create)), binaryLeft("+")(theOp(Add.create)), binaryLeft("-")(theOp(Sub.create))]])($lazy_parseTerm0(122)));
   });
   var $lazy_parseTerm = /* @__PURE__ */ $runtime_lazy5("parseTerm", "Stratify.Syntax.Parser.Core", function() {
     return defer4(function(v) {
-      return alt6($$try($lazy_parseIf(55)))(alt6($$try($lazy_parseOp(56)))($lazy_parseTerm0(57)));
+      return alt6($$try($lazy_parseIf(57)))(alt6($$try($lazy_parseOp(58)))(alt6($$try($lazy_parseLam(59)))($lazy_parseTerm0(60))));
     });
   });
   var $lazy_parseTerm$prime = /* @__PURE__ */ $runtime_lazy5("parseTerm'", "Stratify.Syntax.Parser.Core", function() {
-    return alt6($$try($$parseInt))(alt6($$try(parseBool))(alt6($$try(map11(Var.create)(parseName$prime)))(applyFirst(applyParserT)(applySecond(applyParserT)(symbol("("))(defer4(function(v) {
-      return $lazy_parseTerm(45);
-    })))(symbol(")")))));
+    return alt6($$try($$parseInt))(alt6($$try(parseBool))(alt6($$try(map11(Var.create)(parseName$prime)))(alt6($$try(parseIntType))(alt6($$try(parseBoolType))(applyFirst(applyParserT)(applySecond(applyParserT)(symbol("("))(defer4(function(v) {
+      return $lazy_parseTerm(47);
+    })))(symbol(")")))))));
   });
   var $lazy_parseTerm0 = /* @__PURE__ */ $runtime_lazy5("parseTerm0", "Stratify.Syntax.Parser.Core", function() {
     return alt6($$try(defer4(function(v) {
-      return $lazy_parseApp(50);
+      return $lazy_parseApp(52);
     })))(defer4(function(v) {
-      return $lazy_parseTerm$prime(51);
+      return $lazy_parseTerm$prime(53);
     }));
   });
-  var parseTerm = /* @__PURE__ */ $lazy_parseTerm(53);
+  var parseTerm = /* @__PURE__ */ $lazy_parseTerm(55);
 
   // output/Web.DOM.NonElementParentNode/foreign.js
   function _getElementById(id) {

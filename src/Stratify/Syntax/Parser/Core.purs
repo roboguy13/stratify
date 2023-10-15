@@ -42,6 +42,8 @@ parseTerm' =
     try parseInt
     <|> try parseBool
     <|> try (map Var parseName')
+    <|> try parseIntType
+    <|> try parseBoolType
     <|> (symbol "(" *> (defer \_ -> parseTerm) <* symbol ")")
     -- <|> between (string "(") (string ")") (defer \_ -> parseTerm :: Parser SurfaceTerm)
 
@@ -54,7 +56,24 @@ parseTerm :: Parser SurfaceTerm
 parseTerm = defer \_ ->
     try parseIf
     <|> try parseOp
+    <|> try parseLam
     <|> parseTerm0
+
+parseIntType :: Parser SurfaceTerm
+parseIntType = keyword "Int" $> IntType
+
+parseBoolType :: Parser SurfaceTerm
+parseBoolType = keyword "Bool" $> BoolType
+
+parseLam :: Parser SurfaceTerm
+parseLam = do
+    _ <- symbol "\\"
+    x <- identifier
+    _ <- symbol ":"
+    ty <- parseTerm
+    _ <- symbol "."
+    body <- parseTerm
+    pure $ Lam x ty body
 
 parseApp :: Parser SurfaceTerm
 parseApp = defer \_ -> do
