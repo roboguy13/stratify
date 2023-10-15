@@ -7,24 +7,32 @@ module Stratify.Syntax.Name
   , NameEnv
   , NamingCtx
   , NamingCtx'
+  , class HasIx
+  , class MkVar
   , emptyNameEnv
   , emptyNamingCtx
   , extend
   , initialLevel
+  , isVar
   , ixHere
   , ixLevel
   , ixLookup
   , ixToName
+  , levelIx
   , liftNamingCtx
+  , mkVar
   , nameToIx
   , nextLevel
   , shiftIx
+  , substHere
   )
   where
 
 import Prelude
 
 import Stratify.Utils
+import Stratify.Ppr
+import Stratify.Pretty.Doc
 
 import Data.List
 import Data.Maybe
@@ -38,6 +46,9 @@ type Name = String
 newtype Level = Level Int
 newtype Ix = Ix Int
 
+instance Ppr Ix where
+  pprDoc (Ix i) = text (show i)
+
 derive instance Eq Level
 derive instance Eq Ix
 
@@ -49,6 +60,10 @@ instance Show Ix where show = genericShow
 
 ixLevel :: Level -> Ix -> Level
 ixLevel (Level depth) (Ix i) = Level (depth - i - 1)
+
+levelIx :: Level -> Level -> Ix
+levelIx (Level depth) (Level lvl) = Ix (depth - lvl)
+-- levelIx (Level depth) (Level lvl) = Ix (depth - lvl - 1)
 
 newtype NameEnv a = NameEnv (List a)
 
@@ -103,6 +118,24 @@ liftNamingCtx n nCtx =
     Tuple n ixHere
       :
     nCtx'
+
+substHere :: forall f a. HasIx a => MkVar f a => Bind f =>
+  f a -> f a -> f a
+substHere e z = join $ map go e
+  where
+    go :: a -> f a
+    go x =
+      case isVar x of
+        Just (Ix 0) -> z
+        Just _ -> mkVar x
+        Nothing -> mkVar x
+
+class HasIx a where
+  isVar :: a -> Maybe Ix
+
+class MkVar f a where
+  mkVar :: a -> f a
+  -- setIx :: Ix -> b -> a
 
 -- -- See Stephanie Weirich's talk: https://www.youtube.com/watch?v=j2xYSxMkXeQ
 -- type Subst = NameEnv

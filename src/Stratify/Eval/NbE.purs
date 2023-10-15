@@ -7,6 +7,7 @@ import Prelude
 
 import Stratify.Syntax.Core.Term
 import Stratify.Syntax.Name
+import Stratify.Ppr
 import Stratify.Utils
 
 import Bound
@@ -40,7 +41,7 @@ data Value
   | VNeutral Neutral
 
 data Neutral
-  = NVar Level
+  = NVar Name Level
   | NAdd Neutral Value
   | NSub Neutral Value
   | NMul Neutral Value
@@ -52,7 +53,7 @@ data Neutral
 
   | NNot Neutral
   | NApp Neutral Value
-  | NIf Neutral Value Value
+  | NIf TypeValue Neutral Value Value
 
 type TypeValue = Value
 
@@ -73,6 +74,53 @@ type Eval = Either String
 
 type Env = NameEnv Value
 
+instance Ppr Value where
+  pprDoc x =
+    case quote initialLevel x of
+      Left e -> error e
+      Right r -> pprDoc r
+
+nf :: Term -> Eval Term
+nf = quote initialLevel <=< eval emptyNameEnv
+
+quote :: Level -> Value -> Eval Term
+quote depth (VIntLit i) = pure $ IntLit i
+quote depth (VBoolLit b) = pure $ BoolLit b
+quote depth (VLam ty c0@(Closure c)) =
+  Lam c.argName
+    <$> quote (nextLevel depth) ty
+    <*> quoteAbs (nextLevel depth) c0
+quote depth (VForall ty c0@(Closure c)) =
+  Forall c.argName
+    <$> quote (nextLevel depth) ty
+    <*> quoteAbs (nextLevel depth) c0
+quote depth (VExists ty c0@(Closure c)) =
+  Exists c.argName
+    <$> quote (nextLevel depth) ty
+    <*> quoteAbs (nextLevel depth) c0
+quote depth VIntType = pure IntType
+quote depth VBoolType = pure BoolType
+quote depth (VUniverse k) = pure $ Universe k
+quote depth (VNeutral n) = quoteNeutral depth n
+
+quoteNeutral :: Level -> Neutral -> Eval Term
+quoteNeutral depth (NVar x lvl) = pure $ Var (IxName x (levelIx depth lvl)) -- TODO: Does this work?
+quoteNeutral depth (NAdd x y) = Op <$> (Add <$> quoteNeutral depth x <*> quote depth y)
+quoteNeutral depth (NSub x y) = Op <$> (Sub <$> quoteNeutral depth x <*> quote depth y)
+quoteNeutral depth (NMul x y) = Op <$> (Mul <$> quoteNeutral depth x <*> quote depth y)
+quoteNeutral depth (NDiv x y) = Op <$> (Div <$> quoteNeutral depth x <*> quote depth y)
+quoteNeutral depth (NEqual x y) = Op <$> (Equal <$> quoteNeutral depth x <*> quote depth y)
+quoteNeutral depth (NLt x y) = Op <$> (Lt <$> quoteNeutral depth x <*> quote depth y)
+quoteNeutral depth (NAnd x y) = Op <$> (And <$> quoteNeutral depth x <*> quote depth y)
+quoteNeutral depth (NOr x y) = Op <$> (Or <$> quoteNeutral depth x <*> quote depth y)
+quoteNeutral depth (NNot x) = Not <$> quoteNeutral depth x
+quoteNeutral depth (NApp x y) = App <$> quoteNeutral depth x <*> quote depth y
+quoteNeutral depth (NIf ty x y z) =
+  If <$> quote depth ty <*> quoteNeutral depth x <*> quote depth y <*> quote depth z
+
+quoteAbs :: Level -> Closure -> Eval Term
+quoteAbs lvl (Closure c) = quote lvl =<< (c.fn (VNeutral (NVar c.argName lvl)))
+
 eval :: Env -> Term -> Eval Value
 eval env (Var (IxName x i)) =
   case ixLookup i env of
@@ -86,13 +134,14 @@ eval env (App x y) = do
   xVal <- eval env x
   yVal <- eval env y
   evalApp xVal yVal
-eval env (Lam v ty body) = VLam <$> eval env ty <*> pure (evalClosure env v body)
+eval env (Lam v ty body) = VLam <$> eval env ty <*> pure (mkClosure env v body)
 eval env (If ty x y z) = do
+  tyVal <- eval env ty
   xVal <- eval env x
-  evalIf env xVal y z
+  evalIf env tyVal xVal y z
 eval env (The _ty x) = eval env x
-eval env (Forall v ty body) = VForall <$> eval env ty <*> pure (evalClosure env v body)
-eval env (Exists v ty body) = VExists <$> eval env ty <*> pure (evalClosure env v body)
+eval env (Forall v ty body) = VForall <$> eval env ty <*> pure (mkClosure env v body)
+eval env (Exists v ty body) = VExists <$> eval env ty <*> pure (mkClosure env v body)
 eval env IntType = pure VIntType
 eval env BoolType = pure VBoolType
 eval env (Universe k) = pure (VUniverse k)
@@ -107,30 +156,30 @@ evalOp env (Lt x y) = liftIntOp2 (<) VBoolLit NLt <$> eval env x <*> eval env y
 evalOp env (And x y) = liftBoolOp2 (&&) VBoolLit NAnd <$> eval env x <*> eval env y
 evalOp env (Or x y) = liftBoolOp2 (||) VBoolLit NOr <$> eval env x <*> eval env y
 
-evalClosure :: Env -> Name -> Term -> Closure
-evalClosure env x body =
+mkClosure :: Env -> Name -> Term -> Closure
+mkClosure env x body =
   Closure
   { argName: x
   , fn: \arg -> eval (extend arg env) body
   }
 
-runClosure :: Closure -> Value -> Eval Value
-runClosure (Closure c) x = c.fn x
+evalClosure :: Closure -> Value -> Eval Value
+evalClosure (Closure c) x = c.fn x
 
 evalApp :: Value -> Value -> Eval Value
 evalApp (VNeutral nX) y = do
   pure $ VNeutral $ NApp nX y
-evalApp (VLam ty c) y = runClosure c y
+evalApp (VLam ty c) y = evalClosure c y
 evalApp _ _ = error "evalApp"
 
 evalIf ::
   Env ->
-  Value -> Term -> Term -> Eval Value
-evalIf env (VBoolLit true) y _ = eval env y
-evalIf env (VBoolLit false) _ z = eval env z
-evalIf env (VNeutral n) y z =
-  VNeutral <$> (NIf n <$> eval env y <*> eval env z) -- TODO: Is this right in terms of evaluation order?
-evalIf _ _ _ _ = error "evalIf"
+  TypeValue -> Value -> Term -> Term -> Eval Value
+evalIf env tyVal (VBoolLit true) y _ = eval env y
+evalIf env tyVal (VBoolLit false) _ z = eval env z
+evalIf env tyVal (VNeutral n) y z =
+  VNeutral <$> (NIf tyVal n <$> eval env y <*> eval env z) -- TODO: Is this right in terms of evaluation order?
+evalIf _ _ _ _ _ = error "evalIf"
 
 liftIntOp2 :: forall r. (Int -> Int -> r) -> (r -> Value) -> (Neutral -> Value -> Neutral) -> Value -> Value -> Value
 liftIntOp2 f g h (VIntLit i) (VIntLit j) = g $ f i j
@@ -146,220 +195,3 @@ liftBoolOp2 :: forall r. (Boolean -> Boolean -> r) -> (r -> Value) -> (Neutral -
 liftBoolOp2 f g h (VBoolLit x) (VBoolLit y) = g $ f x y
 liftBoolOp2 f g h (VNeutral x) y = VNeutral $ h x y
 liftBoolOp2 _ _ _ _ _ = error "liftBoolOp2"
-
--- class ToVar a b where
---   toVar :: a -> b
-
--- instance ToVar a b => ToVar (Var x a) (Var x b) where
---   toVar = bimap identity toVar
-
--- instance Profunctor Value where
---   dimap _ _ (VIntLit i) = VIntLit i
---   dimap _ _ (VBoolLit b) = VBoolLit b
---   dimap f g (VLam ty c) = VLam (dimap f g ty) (dimap f g c)
---   dimap f g (VForall ty c) = VForall (dimap f g ty) (dimap f g c)
---   dimap f g (VExists ty c) = VExists (dimap f g ty) (dimap f g c)
---   dimap _ _ VIntType = VIntType
---   dimap _ _ VBoolType = VBoolType
---   dimap _ _ (VUniverse k) = VUniverse k
---   dimap f g (VNeutral ty n) = VNeutral (dimap f g ty) (dimap f g n)
-
--- instance Profunctor Neutral where
---   dimap _ g (NVar x) = NVar (g x)
---   dimap f g (NAdd x y) = NAdd (dimap f g x) (dimap f g y)
---   dimap f g (NSub x y) = NSub (dimap f g x) (dimap f g y)
---   dimap f g (NMul x y) = NMul (dimap f g x) (dimap f g y)
---   dimap f g (NEqual x y) = NEqual (dimap f g x) (dimap f g y)
---   dimap f g (NDiv x y) = NDiv (dimap f g x) (dimap f g y)
---   dimap f g (NLt x y) = NLt (dimap f g x) (dimap f g y)
---   dimap f g (NAnd x y) = NAnd (dimap f g x) (dimap f g y)
---   dimap f g (NOr x y) = NOr (dimap f g x) (dimap f g y)
---   dimap f g (NNot x) = NNot (dimap f g x)
---   dimap f g (NApp x y) = NApp (dimap f g x) (dimap f g y)
---   dimap f g (NIf x y z) = NIf (dimap f g x) (dimap f g y) (dimap f g z)
-
--- type Normal = Value
-
--- -- data Normal a =
--- --   Normal
--- --   { ty :: TypeValue a
--- --   , value :: Value a
--- --   }
-
--- derive instance Generic (Value b a) _
--- derive instance Generic (Neutral b a) _
--- derive instance Generic (Closure b a) _
--- -- derive instance Generic (Normal a) _
-
--- instance (Show b, Show a) => Show (Value b a) where show x = genericShow x
--- instance (Show b, Show a) => Show (Neutral b a) where show x = genericShow x
--- instance Show (Closure b a) where show _ = "<closure>"
--- -- instance Show a => Show (Normal a) where show = genericShow
-
--- type TypeValue = Value
-
--- type Env b a = List (Tuple a (Value b a))
-
--- -- data Closure a =
--- --   Closure
--- --   { env :: Env a
--- --   , name :: String
--- --   , body :: Term a
--- --   }
-
--- data Closure b a =
---   Closure
---   { argName :: a
---   , argType :: TypeValue b a
---   , fn :: Value a b -> Eval (Value b a)
---   }
-
--- instance Profunctor Closure where
---   dimap f g (Closure c) =
---     Closure
---     { argName: g c.argName
---     , argType: dimap f g c.argType
---     , fn: dimap (dimap g f) (map (dimap f g)) c.fn
---     }
-
--- type Eval = Either String
-
--- eval :: forall b a. ToVar a b => Show a => Eq a => Env b a -> Term' b a -> Eval (Value b a)
--- eval env (Var v) = evalVar env v
--- eval _env (IntLit i) = pure $ VIntLit i
--- eval _env (BoolLit b) = pure $ VBoolLit b
--- eval env (Forall v srcTy bnd) = buildClosure env VForall v srcTy bnd
--- eval env (Exists v ty bnd) = buildClosure env VExists v ty bnd
--- eval env (Lam v ty bnd) = buildClosure env VLam v ty bnd
--- eval env (Op (Add x y)) = evalOp2 env (liftIntOp2 (+) VIntLit) NAdd x y
--- eval env (Op (Sub x y)) = evalOp2 env (liftIntOp2 (-) VIntLit) NSub x y
--- eval env (Op (Mul x y)) = evalOp2 env (liftIntOp2 (*) VIntLit) NMul x y
--- eval env (Op (Div x y)) = evalOp2 env (liftIntOp2 div VIntLit) NDiv x y
--- eval env (Op (Equal x y)) = evalOp2 env (liftIntOp2 (==) VBoolLit) NEqual x y
--- eval env (Op (Lt x y)) = evalOp2 env (liftIntOp2 (<) VBoolLit) NLt x y
--- eval env (Op (And x y)) = evalOp2 env (liftBoolOp2 (&&) VBoolLit) NAnd x y
--- eval env (Op (Or x y)) = evalOp2 env (liftBoolOp2 (||) VBoolLit) NOr x y
--- eval env (Not x) = evalOp env (liftBoolOp not VBoolLit) NNot x
--- eval env (App x y) = do
---   xVal <- eval env x
---   yVal <- eval env y
---   evalApp xVal yVal
--- eval env (If ty x y z) = do
---   xVal <- eval env x
---   evalIf env ty xVal y z
--- eval env (The _ty x) = eval env x
--- eval _ BoolType = pure VBoolType
--- eval _ IntType = pure VIntType
--- eval _ (Universe k) = pure $ VUniverse k
-
--- evalApp :: forall b a. ToVar a b => Show a => Eq a =>
---   Value b a -> Value b a -> Eval (Value b a)
--- evalApp (VNeutral (VForall _srcTy resBnd) nX) y = do
---   ty <- evalClosure resBnd y
---   pure $ VNeutral ty $ NApp nX y
--- evalApp (VLam ty c) y = evalClosure c y
--- evalApp _ _ = error "evalApp"
-
--- evalIf :: forall b a. ToVar a b => Show a => Eq a =>
---   Env b a ->
---   Type' b a ->
---   Value b a -> Term' b a -> Term' b a -> Eval (Value b a)
--- evalIf env _ (VBoolLit true) y _ = eval env y
--- evalIf env _ (VBoolLit false) _ z = eval env z
--- evalIf env resTy (VNeutral ty n) y z =
---   VNeutral <$> eval env resTy <*> (NIf n <$> eval env y <*> eval env z) -- TODO: Is this right?
--- evalIf _ _ _ _ _ = error "evalIf"
-
--- evalClosure :: forall b a. ToVar a b => Closure b a -> Value b a -> Eval (Value b a)
--- evalClosure (Closure c) x = c.fn (dimap toVar toVar x)
-
--- liftIntOp2 :: forall r b a. (Int -> Int -> r) -> (r -> Value b a) -> Value b a -> Value b a -> Value b a
--- liftIntOp2 f g (VIntLit i) (VIntLit j) = g $ f i j
--- liftIntOp2 _ _ _ _ = error "liftIntOp2"
-
--- liftBoolOp :: forall r b a. (Boolean -> r) -> (r -> Value b a) -> Value b a -> Value b a
--- liftBoolOp f g (VBoolLit x) = g $ f x
--- liftBoolOp _ _ _ = error "liftBoolOp"
-
--- liftBoolOp2 :: forall r b a. (Boolean -> Boolean -> r) -> (r -> Value b a) -> Value b a -> Value b a -> Value b a
--- liftBoolOp2 f g (VBoolLit x) (VBoolLit y) = g $ f x y
--- liftBoolOp2 _ _ _ _ = error "liftBoolOp2"
-
--- evalOp :: forall b a. ToVar a b => Show a => Eq a =>
---   Env b a ->
---   (Value b a -> Value b a) ->
---   (Neutral b a -> Neutral b a) ->
---   Term' b a -> Eval (Value b a)
--- evalOp env f g x = do
---   x' <- eval env x
---   case x' of
---     VNeutral ty nX -> pure $ VNeutral ty $ g nX
---     _ -> pure $ f x'
-
-
--- evalOp2 :: forall b a. ToVar a b => Show a => Eq a =>
---   Env b a ->
---   (Value b a -> Value b a -> Value b a) ->
---   (Neutral b a -> Value b a -> Neutral b a) ->
---   Term' b a -> Term' b a -> Eval (Value b a)
--- evalOp2 env f g x y = do
---   x' <- eval env x
---   y' <- eval env y
---   case x' of
---     VNeutral ty nX -> pure $ VNeutral ty $ g nX y'
---     _ -> pure $ f x' y'
-
--- buildClosure :: forall b a. ToVar a b => Show a => Eq a =>
---   Env b a ->
---   (TypeValue b a -> Closure b a -> Value b a) ->
---   b -> Type' b a -> CoreScope b a -> Eval (Value b a)
--- buildClosure env f v srcTy bnd = do
---   let abstr :: Value b a -> Eval (Value a b)
---       abstr = \x ->
---           ?a $ eval (convertEnv env v x) (fromScope bnd)
---           -- imap (imap go F) (imap F go) $ eval (convertEnv env v x) (fromScope bnd)
---           -- imap (imap go F) (imap F go) $ eval (convertEnv env v x) (fromScope bnd)
---   argType <- eval env srcTy :: Eval (TypeValue b a)
---   ?a
---   -- pure $ f argType $ (Closure { argName: v, argType: argType, fn: ?abstr })
---   where
---     go :: forall c d. Var c d -> d
---     go (B x) = error "buildClosure.go" -- TODO: Is this actually okay?
---     go (F y) = y
-
--- evalVar :: forall b a. Show a => Eq a => Env b a -> a -> Eval (Value b a)
--- evalVar env v =
---   case find ((_ == v) <<< fst) env of
---       Just (Tuple _ x) -> pure x
---       Nothing -> evalError $ "Cannot find variable " <> show v
-
--- convertVar :: forall b a. Show a => Eq a => Env b a -> Value b a ->
---   Var CoreName a -> Eval (Value b a)
--- convertVar _env val (B _) = pure val
--- convertVar env  _   (F x) = evalVar env x
-
--- convertEnv :: forall b a. Show a => Env b a -> b -> Value b a -> Env b (Var Unit a)
--- convertEnv env v val = error "convertEnv"
---   -- Tuple (B unit) (dimap F go val)
---   --   :
---   -- map (bimap F (imap F go)) env
---   -- where
---   --   go :: forall c d. Show c => Var c d -> d
---   --   go (B x) = error "convertEnv.go" -- TODO: Is this actually okay?
---   --   go (F y) = y
-
--- evalOpened :: forall b a. Show a => Eq a => Env b a -> Value b a ->
---   Term (Var CoreName a) -> Eval (Value b a)
--- evalOpened env x = unsafeCoerce -- ?a <<< eval ?e
---     -- go :: Var CoreName a -> Eval (Value a)
---     -- go (F a) = evalVar env a
---     -- go (B _) = pure x
-
--- evalScope :: forall b a. Scope CoreName (Term' b) a -> Eval (Scope CoreName (Value b) a)
--- evalScope = unsafeCoerce
-
--- -- extendEnv :: forall a. Env a -> a -> TypeValue a -> Env a
--- -- extendEnv = unsafeCoerce
-
--- evalError :: forall a. String -> Eval a
--- evalError = Left

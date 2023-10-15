@@ -63,6 +63,15 @@ data Term' a
   | Universe Int
   -- | Prop -- Impredicative universe of propositions
 
+derive instance Generic (Term' a) _
+derive instance Generic (Op' a) _
+
+instance showTerm :: Show a => Show (Term' a) where
+  show = genericShow
+
+instance showOp :: Show a => Show (Op' a) where
+  show = genericShow
+
 type Type' a = Term' a
 type Type = Term
 type Op = Op' IxName
@@ -72,6 +81,12 @@ data IxName =
   -- { name :: String
   -- , ix :: Ix
   -- }
+
+instance Ppr IxName where
+  pprDoc (IxName x i) = text x <> text "@" <> pprDoc i
+
+derive instance Generic IxName _
+instance Show IxName where show = genericShow
 
 shiftIxName :: IxName -> IxName
 shiftIxName (IxName x i) =
@@ -331,10 +346,3 @@ fnType = Forall mempty
 
 -- -- derive instance genericTerm :: Generic (Term' b a) _
 -- -- derive instance genericOp :: Generic (Op' b a) _
-
--- -- instance showTerm :: Show a => Show (Term' b a) where
--- --   show = genericShow
-
--- -- instance showOp :: Show a => Show (Op' b a) where
--- --   show = genericShow
-

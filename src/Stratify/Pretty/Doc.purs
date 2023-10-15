@@ -21,7 +21,7 @@ atop (Doc x) (Doc y) = Doc (x <> "\n" <> y)
 infixr 5 atop as $$
 
 beside :: Doc -> Doc -> Doc
-beside (Doc x) (Doc y) = Doc (x <> " " <> y)
+beside (Doc x) (Doc y) = Doc (x <> y)
 
 besideSpace :: Doc -> Doc -> Doc
 besideSpace x y = x <> text " " <> y

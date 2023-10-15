@@ -23,7 +23,25 @@ import Data.Traversable
 
 type TypeCheck a = Either String a
 
-type Context a b = List (Tuple a b)
+typeError :: forall a. String -> TypeCheck a
+typeError = Left
+
+type Context = NameEnv Type
+
+
+-- checkType :: Context -> Term -> Type -> TypeCheck Unit
+-- checkType ctx (Lam v ty body) (Forall tyV srcTy tyBnd) = do
+--   _ <- checkType (extend srcTy ctx) tyBnd (Universe 0)
+--   ?a
+--   -- val <- evalClosure 
+--   -- checkType (extend srcTy ctx) (substHere body)
+-- checkType _ctx IntType (Universe 0) = pure unit
+-- checkType _ctx IntType _ =
+--   typeError $ "Expected " <> show (Universe 0 :: Term)
+-- checkType _ _ _ = Left ""
+
+
+-- type Context a b = List (Tuple a b)
 -- type TypeContext a = Context a (Type a)
 
 -- type OpenedTypeContext a = Context (OpenedVar a) (Type (OpenedVar a))
@@ -49,9 +67,6 @@ type Context a b = List (Tuple a b)
 --     go :: OpenedVar a -> TypeCheck (Term a)
 --     go (F x) = pure x
 --     go (B x) = typeError $ "Variable " <> show x <> " escapes its scope"
-
--- typeError :: forall a. String -> TypeCheck a
--- typeError = Left
 
 -- -- TODO: Produce a derivation for type checking (even if the term is ill-typed).
 
