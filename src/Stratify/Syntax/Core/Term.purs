@@ -45,7 +45,7 @@ data Term' a
   | Not (Term' a)
   | App (Term' a) (Term' a)
   | Lam Name (Type' a) (Term' a)
-  | If (Type' a) (Term' a) (Term' a) (Term' a)
+  | If (Term' a) (Term' a) (Term' a)
 
   | The (Type' a) (Term' a)
 
@@ -67,10 +67,10 @@ derive instance Generic (Term' a) _
 derive instance Generic (Op' a) _
 
 instance showTerm :: Show a => Show (Term' a) where
-  show = genericShow
+  show x = genericShow x
 
 instance showOp :: Show a => Show (Op' a) where
-  show = genericShow
+  show x = genericShow x
 
 type Type' a = Term' a
 type Type = Term
@@ -127,8 +127,8 @@ fromNamed = go emptyNamingCtx
     go nCtx (App x y) = App (go nCtx x) (go nCtx y)
     go nCtx (Lam x ty body) =
       goAbstraction nCtx Lam x ty body
-    go nCtx (If ty x y z) =
-      If (go nCtx ty) (go nCtx x) (go nCtx y) (go nCtx z)
+    go nCtx (If x y z) =
+      If (go nCtx x) (go nCtx y) (go nCtx z)
     go nCtx (The ty x) =
       The (go nCtx ty) (go nCtx x)
     go nCtx (Forall x ty body) =
@@ -161,7 +161,7 @@ instance Ppr a => Ppr (Term' a) where
   pprDoc (Not x) = pprNested x
   pprDoc (App x y) = pprNested x <+> pprNested y
   pprDoc (Lam x ty body) = text "\\" <> parens (pprDoc x <+> text ":" <+> pprDoc ty) <> text "." <+> pprDoc body
-  pprDoc (If ty x y z) = text "if" <+> pprDoc x <+> text "then" <+> pprDoc y <+> text "else" <+> pprDoc y
+  pprDoc (If x y z) = text "if" <+> pprDoc x <+> text "then" <+> pprDoc y <+> text "else" <+> pprDoc y
   pprDoc (The ty x) = text "the" <+> pprNested ty <+> pprNested x
   pprDoc (Forall x ty body) = text "forall" <+> parens (pprDoc x <+> text ":" <+> pprDoc ty) <> text "." <+> pprDoc body
   pprDoc (Exists x ty body) = text "exists" <+> parens (pprDoc x <+> text ":" <+> pprDoc ty) <> text "." <+> pprDoc body
@@ -177,7 +177,7 @@ instance Ppr a => Nested (Term' a) where
   isNested (Op _) = true
   isNested (App x y) = true
   isNested (Lam _ _ _) = true
-  isNested (If _ _ _ _) = true
+  isNested (If _ _ _) = true
   isNested (The _ _) = true
   isNested (Universe _) = true
   isNested (Forall _ _ _) = true

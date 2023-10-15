@@ -12,7 +12,8 @@ to generate this file without the comments in this block.
 -}
 { name = "my-project"
 , dependencies =
-  [ "bifunctors"
+  [ "arrays"
+  , "bifunctors"
   , "bound"
   , "console"
   , "control"
@@ -24,11 +25,13 @@ to generate this file without the comments in this block.
   , "invariant"
   , "lists"
   , "maybe"
+  , "parsing"
   , "prelude"
   , "profunctor"
   , "strings"
   , "transformers"
   , "tuples"
+  , "unicode"
   , "unsafe-coerce"
   , "web-dom"
   , "web-events"
