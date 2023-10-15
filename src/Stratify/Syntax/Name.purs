@@ -1,24 +1,37 @@
+-- See this comment by Edward Kmett: https://www.reddit.com/r/haskell/comments/j2q5p8/comment/g7zunsk/
+
 module Stratify.Syntax.Name
+  ( Ix
+  , Level
+  , Name
+  , NameEnv
+  , extend
+  , ixLevel
+  , ixLookup
+  )
   where
 
 import Prelude
-import Data.Generic.Rep
-import Data.Show.Generic
 
-data Name a b =
-  Name
-  { unique :: b
-  , base :: a
-  }
+import Data.List
+import Data.Maybe
 
-instance Eq b => Eq (Name a b) where
-  eq (Name x) (Name y) = x.unique == y.unique
+type Name = String
 
-instance Ord b => Ord (Name a b) where
-  compare (Name x) (Name y) = compare x.unique y.unique
+newtype Level = Level Int
+newtype Ix = Ix Int
 
-derive instance Functor (Name a)
-derive instance Generic (Name a b) _
+ixLevel :: Level -> Ix -> Level
+ixLevel (Level depth) (Ix i) = Level (depth - i - 1)
 
-instance (Show a, Show b) => Show (Name a b) where show = genericShow
+newtype NameEnv a = NameEnv (List a)
 
+ixLookup :: forall a. Ix -> NameEnv a -> Maybe a
+ixLookup (Ix i) (NameEnv xs) = xs !! i
+
+extend :: forall a. a -> NameEnv a -> NameEnv a
+extend x (NameEnv xs) = NameEnv (x : xs)
+
+-- levelIx :: Ix -> Level -> Ix
+
+-- class DeBruijn a where

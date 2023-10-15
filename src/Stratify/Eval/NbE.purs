@@ -54,6 +54,12 @@ data Neutral b a
   | NApp (Neutral b a) (Normal b a)
   | NIf (Neutral b a) (Normal b a) (Normal b a)
 
+class ToVar a b where
+  toVar :: a -> b
+
+instance ToVar a b => ToVar (Var x a) (Var x b) where
+  toVar = bimap identity toVar
+
 instance Profunctor Value where
   dimap _ _ (VIntLit i) = VIntLit i
   dimap _ _ (VBoolLit b) = VBoolLit b
@@ -92,9 +98,9 @@ derive instance Generic (Neutral b a) _
 derive instance Generic (Closure b a) _
 -- derive instance Generic (Normal a) _
 
-instance Show a => Show (Value b a) where show x = genericShow x
-instance Show a => Show (Neutral b a) where show x = genericShow x
-instance Show a => Show (Closure b a) where show _ = "<closure>"
+instance (Show b, Show a) => Show (Value b a) where show x = genericShow x
+instance (Show b, Show a) => Show (Neutral b a) where show x = genericShow x
+instance Show (Closure b a) where show _ = "<closure>"
 -- instance Show a => Show (Normal a) where show = genericShow
 
 type TypeValue = Value
@@ -125,184 +131,145 @@ instance Profunctor Closure where
 
 type Eval = Either String
 
--- instance Invariant Value where
---   imap _ _ (VIntLit i) = VIntLit i
---   imap _ _ (VBoolLit b) = VBoolLit b
---   imap f g (VLam ty c) = VLam (imap f g ty) (imap f g c)
---   imap f g (VForall ty c) = VForall (imap f g ty) (imap f g c)
---   imap f g (VExists ty c) = VExists (imap f g ty) (imap f g c)
---   imap _ _ VIntType = VIntType
---   imap _ _ VBoolType = VBoolType
---   imap _ _ (VUniverse k) = VUniverse k
---   imap f g (VNeutral ty n) = VNeutral (imap f g ty) (imap f g n)
+eval :: forall b a. ToVar a b => Show a => Eq a => Env b a -> Term' b a -> Eval (Value b a)
+eval env (Var v) = evalVar env v
+eval _env (IntLit i) = pure $ VIntLit i
+eval _env (BoolLit b) = pure $ VBoolLit b
+eval env (Forall v srcTy bnd) = buildClosure env VForall v srcTy bnd
+eval env (Exists v ty bnd) = buildClosure env VExists v ty bnd
+eval env (Lam v ty bnd) = buildClosure env VLam v ty bnd
+eval env (Op (Add x y)) = evalOp2 env (liftIntOp2 (+) VIntLit) NAdd x y
+eval env (Op (Sub x y)) = evalOp2 env (liftIntOp2 (-) VIntLit) NSub x y
+eval env (Op (Mul x y)) = evalOp2 env (liftIntOp2 (*) VIntLit) NMul x y
+eval env (Op (Div x y)) = evalOp2 env (liftIntOp2 div VIntLit) NDiv x y
+eval env (Op (Equal x y)) = evalOp2 env (liftIntOp2 (==) VBoolLit) NEqual x y
+eval env (Op (Lt x y)) = evalOp2 env (liftIntOp2 (<) VBoolLit) NLt x y
+eval env (Op (And x y)) = evalOp2 env (liftBoolOp2 (&&) VBoolLit) NAnd x y
+eval env (Op (Or x y)) = evalOp2 env (liftBoolOp2 (||) VBoolLit) NOr x y
+eval env (Not x) = evalOp env (liftBoolOp not VBoolLit) NNot x
+eval env (App x y) = do
+  xVal <- eval env x
+  yVal <- eval env y
+  evalApp xVal yVal
+eval env (If ty x y z) = do
+  xVal <- eval env x
+  evalIf env ty xVal y z
+eval env (The _ty x) = eval env x
+eval _ BoolType = pure VBoolType
+eval _ IntType = pure VIntType
+eval _ (Universe k) = pure $ VUniverse k
 
--- instance Invariant Neutral where
---   imap f _ (NVar x) = NVar (f x)
---   imap f g (NAdd x y) = NAdd (imap f g x) (imap f g y)
---   imap f g (NSub x y) = NSub (imap f g x) (imap f g y)
---   imap f g (NMul x y) = NMul (imap f g x) (imap f g y)
---   imap f g (NEqual x y) = NEqual (imap f g x) (imap f g y)
---   imap f g (NDiv x y) = NDiv (imap f g x) (imap f g y)
---   imap f g (NLt x y) = NLt (imap f g x) (imap f g y)
---   imap f g (NAnd x y) = NAnd (imap f g x) (imap f g y)
---   imap f g (NOr x y) = NOr (imap f g x) (imap f g y)
---   imap f g (NNot x) = NNot (imap f g x)
---   imap f g (NApp x y) = NApp (imap f g x) (imap f g y)
---   imap f g (NIf x y z) = NIf (imap f g x) (imap f g y) (imap f g z)
+evalApp :: forall b a. ToVar a b => Show a => Eq a =>
+  Value b a -> Value b a -> Eval (Value b a)
+evalApp (VNeutral (VForall _srcTy resBnd) nX) y = do
+  ty <- evalClosure resBnd y
+  pure $ VNeutral ty $ NApp nX y
+evalApp (VLam ty c) y = evalClosure c y
+evalApp _ _ = error "evalApp"
 
+evalIf :: forall b a. ToVar a b => Show a => Eq a =>
+  Env b a ->
+  Type' b a ->
+  Value b a -> Term' b a -> Term' b a -> Eval (Value b a)
+evalIf env _ (VBoolLit true) y _ = eval env y
+evalIf env _ (VBoolLit false) _ z = eval env z
+evalIf env resTy (VNeutral ty n) y z =
+  VNeutral <$> eval env resTy <*> (NIf n <$> eval env y <*> eval env z) -- TODO: Is this right?
+evalIf _ _ _ _ _ = error "evalIf"
 
--- -- instance Invariant Normal where
--- --   imap f g (Normal n) =
--- --     Normal
--- --     { ty: imap f g n.ty
--- --     , value: imap f g n.value
--- --     }
+evalClosure :: forall b a. ToVar a b => Closure b a -> Value b a -> Eval (Value b a)
+evalClosure (Closure c) x = c.fn (dimap toVar toVar x)
 
--- instance Invariant Closure where
---   imap f g (Closure c) =
---     Closure
---     { argName: c.argName
---     , argType: imap f g c.argType
---     , fn: \x -> map (imap f g) (c.fn (imap g f x))
---     }
+liftIntOp2 :: forall r b a. (Int -> Int -> r) -> (r -> Value b a) -> Value b a -> Value b a -> Value b a
+liftIntOp2 f g (VIntLit i) (VIntLit j) = g $ f i j
+liftIntOp2 _ _ _ _ = error "liftIntOp2"
 
--- eval :: forall a. Show a => Eq a => Env a -> Term a -> Eval (Value a)
--- eval env (Var v) = evalVar env v
--- eval _env (IntLit i) = pure $ VIntLit i
--- eval _env (BoolLit b) = pure $ VBoolLit b
--- eval env (Forall v srcTy bnd) = buildClosure env VForall v srcTy bnd
--- eval env (Exists v ty bnd) = buildClosure env VExists v ty bnd
--- eval env (Lam v ty bnd) = buildClosure env VLam v ty bnd
--- eval env (Op (Add x y)) = evalOp2 env (liftIntOp2 (+) VIntLit) NAdd x y
--- eval env (Op (Sub x y)) = evalOp2 env (liftIntOp2 (-) VIntLit) NSub x y
--- eval env (Op (Mul x y)) = evalOp2 env (liftIntOp2 (*) VIntLit) NMul x y
--- eval env (Op (Div x y)) = evalOp2 env (liftIntOp2 div VIntLit) NDiv x y
--- eval env (Op (Equal x y)) = evalOp2 env (liftIntOp2 (==) VBoolLit) NEqual x y
--- eval env (Op (Lt x y)) = evalOp2 env (liftIntOp2 (<) VBoolLit) NLt x y
--- eval env (Op (And x y)) = evalOp2 env (liftBoolOp2 (&&) VBoolLit) NAnd x y
--- eval env (Op (Or x y)) = evalOp2 env (liftBoolOp2 (||) VBoolLit) NOr x y
--- eval env (Not x) = evalOp env (liftBoolOp not VBoolLit) NNot x
--- eval env (App x y) = do
---   xVal <- eval env x
---   yVal <- eval env y
---   evalApp xVal yVal
--- eval env (If ty x y z) = do
---   xVal <- eval env x
---   evalIf env ty xVal y z
--- eval env (The _ty x) = eval env x
--- eval _ BoolType = pure VBoolType
--- eval _ IntType = pure VIntType
--- eval _ (Universe k) = pure $ VUniverse k
+liftBoolOp :: forall r b a. (Boolean -> r) -> (r -> Value b a) -> Value b a -> Value b a
+liftBoolOp f g (VBoolLit x) = g $ f x
+liftBoolOp _ _ _ = error "liftBoolOp"
 
--- evalApp :: forall a. Show a => Eq a =>
---   Value a -> Value a -> Eval (Value a)
--- evalApp (VNeutral (VForall _srcTy resBnd) nX) y = do
---   ty <- evalClosure resBnd y
---   pure $ VNeutral ty $ NApp nX y
--- evalApp (VLam ty c) y = evalClosure c y
--- evalApp _ _ = error "evalApp"
+liftBoolOp2 :: forall r b a. (Boolean -> Boolean -> r) -> (r -> Value b a) -> Value b a -> Value b a -> Value b a
+liftBoolOp2 f g (VBoolLit x) (VBoolLit y) = g $ f x y
+liftBoolOp2 _ _ _ _ = error "liftBoolOp2"
 
--- evalIf :: forall a. Show a => Eq a =>
---   Env a ->
---   Type a ->
---   Value a -> Term a -> Term a -> Eval (Value a)
--- evalIf env _ (VBoolLit true) y _ = eval env y
--- evalIf env _ (VBoolLit false) _ z = eval env z
--- evalIf env resTy (VNeutral ty n) y z =
---   VNeutral <$> eval env resTy <*> (NIf n <$> eval env y <*> eval env z) -- TODO: Is this right?
--- evalIf _ _ _ _ _ = error "evalIf"
-
--- evalClosure :: forall a. Closure a -> Value a -> Eval (Value a)
--- evalClosure (Closure c) x = c.fn x
-
--- liftIntOp2 :: forall r a. (Int -> Int -> r) -> (r -> Value a) -> Value a -> Value a -> Value a
--- liftIntOp2 f g (VIntLit i) (VIntLit j) = g $ f i j
--- liftIntOp2 _ _ _ _ = error "liftIntOp2"
-
--- liftBoolOp :: forall r a. (Boolean -> r) -> (r -> Value a) -> Value a -> Value a
--- liftBoolOp f g (VBoolLit x) = g $ f x
--- liftBoolOp _ _ _ = error "liftBoolOp"
-
--- liftBoolOp2 :: forall r a. (Boolean -> Boolean -> r) -> (r -> Value a) -> Value a -> Value a -> Value a
--- liftBoolOp2 f g (VBoolLit x) (VBoolLit y) = g $ f x y
--- liftBoolOp2 _ _ _ _ = error "liftBoolOp2"
-
--- evalOp :: forall a. Show a => Eq a =>
---   Env a ->
---   (Value a -> Value a) ->
---   (Neutral a -> Neutral a) ->
---   Term a -> Eval (Value a)
--- evalOp env f g x = do
---   x' <- eval env x
---   case x' of
---     VNeutral ty nX -> pure $ VNeutral ty $ g nX
---     _ -> pure $ f x'
+evalOp :: forall b a. ToVar a b => Show a => Eq a =>
+  Env b a ->
+  (Value b a -> Value b a) ->
+  (Neutral b a -> Neutral b a) ->
+  Term' b a -> Eval (Value b a)
+evalOp env f g x = do
+  x' <- eval env x
+  case x' of
+    VNeutral ty nX -> pure $ VNeutral ty $ g nX
+    _ -> pure $ f x'
 
 
--- evalOp2 :: forall a. Show a => Eq a =>
---   Env a ->
---   (Value a -> Value a -> Value a) ->
---   (Neutral a -> Value a -> Neutral a) ->
---   Term a -> Term a -> Eval (Value a)
--- evalOp2 env f g x y = do
---   x' <- eval env x
---   y' <- eval env y
---   case x' of
---     VNeutral ty nX -> pure $ VNeutral ty $ g nX y'
---     _ -> pure $ f x' y'
+evalOp2 :: forall b a. ToVar a b => Show a => Eq a =>
+  Env b a ->
+  (Value b a -> Value b a -> Value b a) ->
+  (Neutral b a -> Value b a -> Neutral b a) ->
+  Term' b a -> Term' b a -> Eval (Value b a)
+evalOp2 env f g x y = do
+  x' <- eval env x
+  y' <- eval env y
+  case x' of
+    VNeutral ty nX -> pure $ VNeutral ty $ g nX y'
+    _ -> pure $ f x' y'
 
--- buildClosure :: forall a. Show a => Eq a =>
---   Env a ->
---   (TypeValue a -> Closure a -> Value a) ->
---   String -> Type a -> CoreScope a a -> Eval (Value a)
--- buildClosure env f v srcTy bnd = do
---   let abstr :: Value a -> Eval (Value a)
---       abstr = \x ->
---           imap (imap go F) (imap F go) $ eval (convertEnv env v x) (fromScope bnd)
---           -- imap (imap go F) (imap F go) $ eval (convertEnv env v x) (fromScope bnd)
---   argType <- eval env srcTy
---   pure $ f argType $ (Closure { argName: v, argType: argType, fn: abstr })
---   where
---     go :: forall c d. Var c d -> d
---     go (B x) = error "buildClosure.go" -- TODO: Is this actually okay?
---     go (F y) = y
+buildClosure :: forall b a. ToVar a b => Show a => Eq a =>
+  Env b a ->
+  (TypeValue b a -> Closure b a -> Value b a) ->
+  b -> Type' b a -> CoreScope b a -> Eval (Value b a)
+buildClosure env f v srcTy bnd = do
+  let abstr :: Value b a -> Eval (Value a b)
+      abstr = \x ->
+          ?a $ eval (convertEnv env v x) (fromScope bnd)
+          -- imap (imap go F) (imap F go) $ eval (convertEnv env v x) (fromScope bnd)
+          -- imap (imap go F) (imap F go) $ eval (convertEnv env v x) (fromScope bnd)
+  argType <- eval env srcTy :: Eval (TypeValue b a)
+  ?a
+  -- pure $ f argType $ (Closure { argName: v, argType: argType, fn: ?abstr })
+  where
+    go :: forall c d. Var c d -> d
+    go (B x) = error "buildClosure.go" -- TODO: Is this actually okay?
+    go (F y) = y
 
--- evalVar :: forall a. Show a => Eq a => Env a -> a -> Eval (Value a)
--- evalVar env v =
---   case find ((_ == v) <<< fst) env of
---       Just (Tuple _ x) -> pure x
---       Nothing -> evalError $ "Cannot find variable " <> show v
+evalVar :: forall b a. Show a => Eq a => Env b a -> a -> Eval (Value b a)
+evalVar env v =
+  case find ((_ == v) <<< fst) env of
+      Just (Tuple _ x) -> pure x
+      Nothing -> evalError $ "Cannot find variable " <> show v
 
--- convertVar :: forall a. Show a => Eq a => Env a -> Value a ->
---   Var CoreName a -> Eval (Value a)
--- convertVar _env val (B _) = pure val
--- convertVar env  _   (F x) = evalVar env x
+convertVar :: forall b a. Show a => Eq a => Env b a -> Value b a ->
+  Var CoreName a -> Eval (Value b a)
+convertVar _env val (B _) = pure val
+convertVar env  _   (F x) = evalVar env x
 
--- convertEnv :: forall a. Show a => Env a -> String -> Value a -> Env (Var Unit a)
--- convertEnv env v val =
---   Tuple (B unit) (imap F go val)
---     :
---   map (bimap F (imap F go)) env
---   where
---     go :: forall c d. Show c => Var c d -> d
---     go (B x) = error "convertEnv.go" -- TODO: Is this actually okay?
---     go (F y) = y
+convertEnv :: forall b a. Show a => Env b a -> b -> Value b a -> Env b (Var Unit a)
+convertEnv env v val = error "convertEnv"
+  -- Tuple (B unit) (dimap F go val)
+  --   :
+  -- map (bimap F (imap F go)) env
+  -- where
+  --   go :: forall c d. Show c => Var c d -> d
+  --   go (B x) = error "convertEnv.go" -- TODO: Is this actually okay?
+  --   go (F y) = y
 
--- evalOpened :: forall a. Show a => Eq a => Env a -> Value a ->
---   Term (Var CoreName a) -> Eval (Value a)
--- evalOpened env x = unsafeCoerce -- ?a <<< eval ?e
---     -- go :: Var CoreName a -> Eval (Value a)
---     -- go (F a) = evalVar env a
---     -- go (B _) = pure x
+evalOpened :: forall b a. Show a => Eq a => Env b a -> Value b a ->
+  Term (Var CoreName a) -> Eval (Value b a)
+evalOpened env x = unsafeCoerce -- ?a <<< eval ?e
+    -- go :: Var CoreName a -> Eval (Value a)
+    -- go (F a) = evalVar env a
+    -- go (B _) = pure x
 
--- evalScope :: forall b a. Scope CoreName (Term' b) a -> Eval (Scope CoreName Value a)
--- evalScope = unsafeCoerce
+evalScope :: forall b a. Scope CoreName (Term' b) a -> Eval (Scope CoreName (Value b) a)
+evalScope = unsafeCoerce
 
--- -- extendEnv :: forall a. Env a -> a -> TypeValue a -> Env a
--- -- extendEnv = unsafeCoerce
+-- extendEnv :: forall a. Env a -> a -> TypeValue a -> Env a
+-- extendEnv = unsafeCoerce
 
--- evalError :: forall a. String -> Eval a
--- evalError = Left
+evalError :: forall a. String -> Eval a
+evalError = Left
 
--- error :: forall a. String -> a
--- error = unsafePerformEffect <<< throw
+error :: forall a. String -> a
+error = unsafePerformEffect <<< throw
