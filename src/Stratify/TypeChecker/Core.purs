@@ -24,9 +24,9 @@ import Data.Traversable
 type TypeCheck a = Either String a
 
 type Context a b = List (Tuple a b)
-type TypeContext a = Context a (Type a)
+-- type TypeContext a = Context a (Type a)
 
-type OpenedTypeContext a = Context (OpenedVar a) (Type (OpenedVar a))
+-- type OpenedTypeContext a = Context (OpenedVar a) (Type (OpenedVar a))
 -- type OpenedTypeContext a = OpenedContext a (Type (OpenedVar a))
 
 -- openContext :: forall a. TypeContext a -> String -> Type (OpenedVar a) -> OpenedTypeContext a
