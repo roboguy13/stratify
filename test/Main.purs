@@ -14,5 +14,8 @@ import Bound
 main :: Effect Unit
 main = do
   log $ show $ eval Nil (App (Lam "x" IntType (abstract1 "x" (Var "x"))) (IntLit 1))
-  -- log "🍝"
-  -- log "You should add some tests."
+  log $ show $ eval Nil $
+    App (App (lam "x" (fnType IntType IntType)
+                (lam "y" IntType (Op (Sub (Var "x") (Var "y")))))
+             (IntLit 10))
+        (IntLit 1)

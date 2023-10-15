@@ -13,7 +13,11 @@ import Data.Traversable
 import Data.Tuple
 import Prelude
 import Prim hiding (Type)
+import Data.Monoid
+
 import Stratify.Syntax.Name
+import Stratify.Pretty.Doc
+import Stratify.Ppr
 
 import Data.Foldable (fold)
 
@@ -30,29 +34,32 @@ mkCoreName :: String -> CoreName
 mkCoreName s = Name { base: s, unique: unit }
 
 -- type CoreScope a = Scope CoreName Term a
-type CoreScope a = Scope Unit Term a
+type CoreScope b a = Scope Unit (Term' b) a
 
-data Op a
-  = Add (Term a) (Term a)
-  | Sub (Term a) (Term a)
-  | Mul (Term a) (Term a)
-  | Div (Term a) (Term a)
-  | Equal (Term a) (Term a)
-  | Lt (Term a) (Term a)
-  | And (Term a) (Term a)
-  | Or (Term a) (Term a)
+data Op' b a
+  = Add (Term' b a) (Term' b a)
+  | Sub (Term' b a) (Term' b a)
+  | Mul (Term' b a) (Term' b a)
+  | Div (Term' b a) (Term' b a)
+  | Equal (Term' b a) (Term' b a)
+  | Lt (Term' b a) (Term' b a)
+  | And (Term' b a) (Term' b a)
+  | Or (Term' b a) (Term' b a)
 
-data Term a
+type Op a = Op' a a
+
+data Term' :: Prim.Type -> Prim.Type -> Prim.Type
+data Term' b a
   = Var a
   | IntLit Int
   | BoolLit Boolean
-  | Op (Op a)
-  | Not (Term a)
-  | App (Term a) (Term a)
-  | Lam String (Type a) (CoreScope a)
-  | If (Type a) (Term a) (Term a) (Term a)
+  | Op (Op' b a)
+  | Not (Term' b a)
+  | App (Term' b a) (Term' b a)
+  | Lam b (Type' b a) (CoreScope b a)
+  | If (Type' b a) (Term' b a) (Term' b a) (Term' b a)
 
-  | The (Type a) (Term a)
+  | The (Type' b a) (Term' b a)
 
   -- | Ann (Term a) (Type a)
 
@@ -61,24 +68,80 @@ data Term a
   -- | Match (Term a) (List (MatchBranch a))
 
   -- Types --
-  | Forall String (Type a) (CoreScope a)
-  | Exists String (Type a) (CoreScope a)
+  | Forall b (Type' b a) (CoreScope b a)
+  | Exists b (Type' b a) (CoreScope b a)
   | IntType
   | BoolType
   | Universe Int
   -- | Prop -- Impredicative universe of propositions
 
+type Term :: Prim.Type -> Prim.Type
+type Term a = Term' a a
+type Type' = Term'
+type Type :: Prim.Type -> Prim.Type
+type Type a = Term a
 
+-- Basic pretty-printer. Other pretty-printers should be used for particular language levels
+instance (Ppr a) => Ppr (Term' a a) where
+  pprDoc (Var v) = pprDoc v
+  pprDoc (IntLit i) = text $ show i
+  pprDoc (BoolLit b) = text $ show b
+  pprDoc (Op x) = pprDoc x
+  pprDoc (Not x) = pprNested x
+  pprDoc (App x y) = pprNested x <+> pprNested y
+  pprDoc (Lam x ty bnd) = text "\\" <> parens (pprDoc x <+> text ":" <+> pprDoc ty) <> text "." <+> pprDoc (instantiate1 (Var x) bnd)
+  pprDoc (If ty x y z) = text "if" <+> pprDoc x <+> text "then" <+> pprDoc y <+> text "else" <+> pprDoc y
+  pprDoc (The ty x) = text "the" <+> pprNested ty <+> pprNested x
+  pprDoc (Forall x ty bnd) = text "forall" <+> parens (pprDoc x <+> text ":" <+> pprDoc ty) <> text "." <+> pprDoc (instantiate1 (Var x) bnd)
+  pprDoc (Exists x ty bnd) = text "exists" <+> parens (pprDoc x <+> text ":" <+> pprDoc ty) <> text "." <+> pprDoc (instantiate1 (Var x) bnd)
+  pprDoc IntType = text "Int"
+  pprDoc BoolType = text "Bool"
+  pprDoc (Universe 0) = text "Type"
+  pprDoc (Universe k) = text "Type" <+> text (show k)
 
-type MatchBranch a =
+instance Ppr a => Nested (Term' a a) where
+  isNested (Var _) = false
+  isNested (IntLit _) = false
+  isNested (BoolLit _) = false
+  isNested (Op _) = true
+  isNested (App x y) = true
+  isNested (Lam _ _ _) = true
+  isNested (If _ _ _ _) = true
+  isNested (The _ _) = true
+  isNested (Universe _) = true
+  isNested (Forall _ _ _) = true
+  isNested (Exists _ _ _) = true
+  isNested (Not _) = true
+  isNested IntType = false
+  isNested BoolType = false
+
+instance Ppr a => Ppr (Op a) where
+  pprDoc e = case e of
+      Add x y -> pprBin "+" x y
+      Sub x y -> pprBin "-" x y
+      Mul x y -> pprBin "*" x y
+      Div x y -> pprBin "/" x y
+      Equal x y -> pprBin "==" x y
+      Lt x y -> pprBin "<" x y
+      And x y -> pprBin "&&" x y
+      Or x y -> pprBin "||" x y
+    where
+      pprBin op x y = pprDoc x <+> text op <+> pprDoc y
+
+fnType :: forall b a. Monoid b => Eq a => Monoid a => Type' b a -> Type' b a -> Type' b a
+fnType src tgt = Forall mempty src (abstract1 mempty tgt)
+
+lam :: String -> Type String -> Term String -> Term String
+lam x ty body = Lam x ty (abstract1 x body)
+
+type MatchBranch b a =
   { constructor :: String
-  , scope :: Scope Unit Term (List a)
+  , scope :: Scope Unit (Term' b) (List a)
   }
 
-type Type = Term
 
-type OpenedVar a = Var (Name String Unit) (Term a)
-openTerm :: forall a. Term a -> Term (OpenedVar a)
+type OpenedVar b a = Var (Name String Unit) (Term' b a)
+openTerm :: forall b a. Term' b a -> Term' b (OpenedVar b a)
 openTerm = map (F <<< Var)
 
 -- instance Unify Term where
@@ -114,19 +177,19 @@ openTerm = map (F <<< Var)
 -- matchOp (Or x y) (Or x' y') = Just (Tuple x x' : Tuple y y' : Nil)
 -- matchOp _ _ = Nothing
 
-derive instance functorOp :: Functor Op
-derive instance functorTerm :: Functor Term
-derive instance eqOp :: Eq a => Eq (Op a)
-derive instance eqTerm :: Eq a => Eq (Term a)
-derive instance eq1Term :: Eq1 Term
+derive instance functorOp :: Functor (Op' b)
+derive instance functorTerm :: Functor (Term' b)
+derive instance eqOp :: (Eq b, Eq a) => Eq (Op' b a)
+derive instance eqTerm :: (Eq b, Eq a) => Eq (Term' b a)
+derive instance eq1Term :: Eq b => Eq1 (Term' b)
 
-instance applyTerm :: Apply Term where
+instance applyTerm :: Apply (Term' b) where
   apply = ap
 
-instance applicativeTerm :: Applicative Term where
+instance applicativeTerm :: Applicative (Term' b) where
   pure = Var
 
-instance bindTerm :: Bind Term where
+instance bindTerm :: Bind (Term' b) where
   bind t f =
     case t of
       Op x0 ->
@@ -156,9 +219,9 @@ instance bindTerm :: Bind Term where
 
       The ty x -> The (bind ty f) (bind x f)
 
-instance monadTerm :: Monad Term
+instance monadTerm :: Monad (Term' b)
 
-freeVars :: forall a. Term a -> List a
+freeVars :: forall b a. Term' b a -> List a
 freeVars (Var v) = v : Nil
 freeVars (Op (Add x y)) = freeVars x <> freeVars y
 freeVars (Op (Sub x y)) = freeVars x <> freeVars y
@@ -186,42 +249,42 @@ toF (F x) = Just x
 toF (B _) = Nothing
 
 
-instance foldableTerm :: Foldable Term where
-  foldMap f = fold <<< freeVars <<< map f
-  foldr f = foldrDefault f
-  foldl f = foldlDefault f
+-- instance foldableTerm :: Foldable (Term' b) where
+--   foldMap f = fold <<< freeVars <<< map f
+--   foldr f = foldrDefault f
+--   foldl f = foldlDefault f
 
-instance traversableTerm :: Traversable Term where
-  traverse f (Var x) = Var <$> f x
-  traverse f (Op (Add x y)) = Op <$> lift2 Add (traverse f x) (traverse f y)
-  traverse f (Op (Sub x y)) = Op <$> lift2 Sub (traverse f x) (traverse f y)
-  traverse f (Op (Mul x y)) = Op <$> lift2 Mul (traverse f x) (traverse f y)
-  traverse f (Op (Div x y)) = Op <$> lift2 Div (traverse f x) (traverse f y)
-  traverse f (Op (Equal x y)) = Op <$> lift2 Equal (traverse f x) (traverse f y)
-  traverse f (Op (Lt x y)) = Op <$> lift2 Lt (traverse f x) (traverse f y)
-  traverse f (Op (And x y)) = Op <$> lift2 And (traverse f x) (traverse f y)
-  traverse f (Op (Or x y)) = Op <$> lift2 Or (traverse f x) (traverse f y)
-  traverse f (IntLit i) = pure $ IntLit i
-  traverse f (BoolLit b) = pure $ BoolLit b
-  traverse f (Not x) = map Not (traverse f x)
-  traverse f (App x y) = lift2 App (traverse f x) (traverse f y)
-  traverse f (If ty x y z) = lift4 If (traverse f ty) (traverse f x) (traverse f y) (traverse f z)
-  traverse f IntType = pure IntType
-  traverse f BoolType = pure BoolType
-  traverse f (Universe k) = pure $ Universe k
-  traverse f (Lam v ty bnd) = Lam v <$> traverse f ty <*> traverse f bnd
-  traverse f (Forall v ty bnd) = Forall v <$> traverse f ty <*> (traverse f bnd)
-  traverse f (Exists v ty bnd) = Exists v <$> traverse f ty <*> (traverse f bnd)
-  traverse f (The ty t) = The <$> traverse f ty <*> traverse f t
+-- instance traversableTerm :: Traversable (Term' b) where
+--   traverse f (Var x) = Var <$> f x
+--   traverse f (Op (Add x y)) = Op <$> lift2 Add (traverse f x) (traverse f y)
+--   traverse f (Op (Sub x y)) = Op <$> lift2 Sub (traverse f x) (traverse f y)
+--   traverse f (Op (Mul x y)) = Op <$> lift2 Mul (traverse f x) (traverse f y)
+--   traverse f (Op (Div x y)) = Op <$> lift2 Div (traverse f x) (traverse f y)
+--   traverse f (Op (Equal x y)) = Op <$> lift2 Equal (traverse f x) (traverse f y)
+--   traverse f (Op (Lt x y)) = Op <$> lift2 Lt (traverse f x) (traverse f y)
+--   traverse f (Op (And x y)) = Op <$> lift2 And (traverse f x) (traverse f y)
+--   traverse f (Op (Or x y)) = Op <$> lift2 Or (traverse f x) (traverse f y)
+--   traverse f (IntLit i) = pure $ IntLit i
+--   traverse f (BoolLit b) = pure $ BoolLit b
+--   traverse f (Not x) = map Not (traverse f x)
+--   traverse f (App x y) = lift2 App (traverse f x) (traverse f y)
+--   traverse f (If ty x y z) = lift4 If (traverse f ty) (traverse f x) (traverse f y) (traverse f z)
+--   traverse f IntType = pure IntType
+--   traverse f BoolType = pure BoolType
+--   traverse f (Universe k) = pure $ Universe k
+--   traverse f (Lam v ty bnd) = Lam v <$> traverse f ty <*> traverse f bnd
+--   traverse f (Forall v ty bnd) = Forall v <$> traverse f ty <*> (traverse f bnd)
+--   traverse f (Exists v ty bnd) = Exists v <$> traverse f ty <*> (traverse f bnd)
+--   traverse f (The ty t) = The <$> traverse f ty <*> traverse f t
 
-  sequence = traverse identity
+--   sequence = traverse identity
 
-derive instance genericTerm :: Generic (Term a) _
-derive instance genericOp :: Generic (Op a) _
+-- derive instance genericTerm :: Generic (Term' b a) _
+-- derive instance genericOp :: Generic (Op' b a) _
 
-instance showTerm :: Show a => Show (Term a) where
-  show = genericShow
+-- instance showTerm :: Show a => Show (Term' b a) where
+--   show = genericShow
 
-instance showOp :: Show a => Show (Op a) where
-  show = genericShow
+-- instance showOp :: Show a => Show (Op' b a) where
+--   show = genericShow
 

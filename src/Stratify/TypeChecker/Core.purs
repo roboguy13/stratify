@@ -56,7 +56,7 @@ type OpenedTypeContext a = Context (OpenedVar a) (Type (OpenedVar a))
 -- -- TODO: Produce a derivation for type checking (even if the term is ill-typed).
 
 -- checkType :: forall a. Show a => Eq a => TypeContext a -> Term a -> Type a -> TypeCheck Unit
--- checkType ctx (Lam v bnd) (Forall tyV srcTy tyBnd) = checkTypeScope (openContext ctx v tyV srcTy) bnd tyBnd
+-- checkType ctx (Lam v ty bnd) (Forall tyV srcTy tyBnd) = checkTypeScope (openContext ctx v tyV srcTy) bnd tyBnd
 -- checkType _ctx IntType (Universe 0) = pure unit
 -- checkType _ctx IntType _ = typeError $ "Expected " <> show (Universe 0 :: Term a)
 -- checkType _ctx BoolType (Universe 0) = pure unit
@@ -71,7 +71,8 @@ type OpenedTypeContext a = Context (OpenedVar a) (Type (OpenedVar a))
 
 -- checkTypeScope :: forall a. Show a => Eq a => OpenedTypeContext a -> CoreScope a -> CoreScope a -> TypeCheck Unit
 -- checkTypeScope ctx (Scope t) (Scope ty) =
---   checkType ctx t ty
+--   ?a
+--   -- checkType ctx t ty
 
 -- inferType :: forall a. Show a => Eq a => TypeContext a -> Term a -> TypeCheck (Type a)
 -- inferType ctx (Var x) =
@@ -81,7 +82,7 @@ type OpenedTypeContext a = Context (OpenedVar a) (Type (OpenedVar a))
 -- -- inferType ctx (Ann x ty) = checkType ctx x ty
 -- inferType _ctx (IntLit _) = pure IntType
 -- inferType _ctx (BoolLit _) = pure BoolType
--- inferType _ctx (Lam _v _bnd) = typeError $ "Cannot infer a lambda"
+-- inferType _ctx (Lam _v _ty _bnd) = typeError $ "Cannot infer a lambda"
 -- inferType ctx (The ty t) = checkType ctx t ty $> ty
 -- inferType _ _ = typeError ""
 
