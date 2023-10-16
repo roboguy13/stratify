@@ -256,7 +256,7 @@ instance (IsName b, HasIx a, IsName a, Ppr b, Ppr a) => Ppr (Term'' b a) where
   pprDoc (Not x) = pprNested x
   pprDoc (App x y) = pprNested x <+> pprNested y
   pprDoc (Lam x ty body) = text "\\" <> parens (pprDoc x <+> text ":" <+> pprDoc ty) <> text "." <+> pprDoc body
-  pprDoc (If x y z) = text "if" <+> pprDoc x <+> text "then" <+> pprDoc y <+> text "else" <+> pprDoc y
+  pprDoc (If x y z) = text "if" <+> pprDoc x <+> text "then" <+> pprDoc y <+> text "else" <+> pprDoc z
   pprDoc (The ty x) = text "the" <+> pprNested ty <+> pprNested x
   pprDoc (Forall x ty body) =
     if isBinderHereUnused body
