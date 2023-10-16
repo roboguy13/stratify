@@ -6,9 +6,13 @@ import Prelude
 
 import Stratify.Syntax.Core.Term
 import Stratify.Syntax.Name
+import Stratify.Ppr
+import Stratify.Eval.NbE
+import Stratify.Utils
 
 import Bound
 
+import Data.Tuple.Nested
 import Data.Either
 import Data.Unit
 import Data.List
@@ -27,6 +31,88 @@ typeError :: forall a. String -> TypeCheck a
 typeError = Left
 
 type Context = NameEnv Type
+
+checkType :: Context -> Term -> Type -> TypeCheck Unit
+checkType ctx (Var x) ty =
+  case lookup x ctx of
+    Nothing -> typeError $ "Cannot find variable " <> ppr x
+    Just ty' -> requireSameType ty ty'
+checkType ctx (IntLit _) ty = requireSameType ty IntType
+checkType ctx (BoolLit _) ty = requireSameType ty BoolType
+checkType ctx (Op x) ty = checkOp ctx x ty
+checkType ctx (Not x) ty = do
+  checkType ctx x BoolType
+  requireSameType ty BoolType
+checkType ctx (App x y) ty = error "App"
+  -- xTy <- inferType ctx x
+  -- Tuple n (Tuple src tgtBody) <- isForall xTy
+  -- checkType ctx y src
+  -- ?a
+checkType ctx (Lam x argTy body) ty = do
+  Tuple _ (Tuple src tgtBody) <- isForall ty
+  -- let tyVal = evalClosure' argTy
+  let tgt = substHere tgtBody src
+  checkType (extend argTy ctx) body tgtBody
+checkType ctx (If x y z) ty = do
+  checkType ctx x BoolType
+  checkType ctx y ty
+  checkType ctx z ty
+checkType ctx (The ty' x) ty = do
+  requireSameType ty ty'
+  checkType ctx x ty'
+checkType ctx (Forall _ _ _) ty = ?a
+checkType ctx (Exists _ _ _) ty = ?a
+checkType ctx IntType ty = requireSameType ty (Universe 0)
+checkType ctx BoolType ty = requireSameType ty (Universe 0)
+checkType ctx (Universe k) ty = requireSameType ty (Universe (k + 1))
+
+isForall :: Type -> TypeCheck (Name /\ Type /\ Type)
+isForall (Forall x src tgt) = pure $ Tuple x (Tuple src tgt)
+isForall ty = typeError $ "Expected forall type, got " <> ppr ty
+
+-- See https://math.andrej.com/2012/11/08/how-to-implement-dependent-type-theory-i/
+inferType :: Context -> Term -> TypeCheck Type
+inferType ctx (Var x) =
+  case lookup x ctx of
+    Nothing -> typeError $ "Cannot find variable " <> ppr x
+    Just ty' -> pure ty'
+inferType ctx (Forall x src tgtBody) = do
+  k1 <- inferUniverse ctx src
+  k2 <- inferUniverse (extend src ctx) tgtBody
+  pure (Universe (max k1 k2))
+inferType ctx (App x y) = do
+  Tuple x (Tuple src tgt) <- inferForall ctx x
+  yTy <- inferType ctx y
+  requireSameType src yTy
+  pure $ substHere y tgt
+inferType ctx (Universe k) = pure (Universe (k + 1))
+inferType ctx (The ty x) = do
+  checkType ctx x ty
+  pure ty
+-- inferType ctx x = error "inferType"
+
+inferForall :: Context -> Term -> TypeCheck (Name /\ Type /\ Type)
+inferForall ctx x = do
+  ty <- inferType ctx x
+  case nf ty of
+    Forall x src tgt -> pure (Tuple x (Tuple src tgt))
+    _ -> typeError $ "Function expected, got " <> ppr x
+
+inferUniverse :: Context -> Type -> TypeCheck Int
+inferUniverse ctx ty = do
+  u <- inferType ctx ty
+  case nf u of
+    Universe k -> pure k
+    _ -> typeError $ "Expected type, got " <> ppr ty
+
+checkOp :: Context -> Op -> Type -> TypeCheck Unit
+checkOp ctx x ty = pure unit
+
+requireSameType :: Type -> Type -> TypeCheck Unit
+requireSameType ty ty' =
+  if alphaEquiv ty ty'
+    then pure unit
+    else typeError $ "Type " <> show ty <> " does not match " <> show ty'
 
 
 -- checkType :: Context -> Term -> Type -> TypeCheck Unit
@@ -100,12 +186,6 @@ type Context = NameEnv Type
 -- inferType _ctx (Lam _v _ty _bnd) = typeError $ "Cannot infer a lambda"
 -- inferType ctx (The ty t) = checkType ctx t ty $> ty
 -- inferType _ _ = typeError ""
-
--- requireSameType :: forall a. Show a => Eq a => Type a -> Type a -> TypeCheck Unit
--- requireSameType ty ty' =
---   if ty == ty'
---     then pure unit
---     else typeError $ "Type " <> show ty <> " does not match " <> show ty'
 
 -- extend :: forall a b. Eq a => a -> b -> Context a b -> Context a b
 -- extend x y xs = Tuple x y : xs

@@ -26,6 +26,7 @@ import Stratify.Ppr
 import Stratify.Syntax.Parser.Core
 
 import Parsing (runParser)
+import Parsing.String (eof)
 
 import Data.Either
 import Data.Maybe (Maybe(..))
@@ -50,7 +51,7 @@ onClick inputArea outputArea event =
     Nothing -> pure unit
     Just _ -> do
       inputVal <- TextAreaElement.value inputArea
-      case runParser inputVal parseTerm of
+      case runParser inputVal (parseTerm <* eof) of
         Left e -> TextAreaElement.setValue ("Parse error: " <> show e) outputArea
         Right parsed ->
           case nf (fromNamed parsed) of

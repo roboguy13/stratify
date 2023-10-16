@@ -19,6 +19,7 @@ import Data.String as String
 import Stratify.Syntax.Name
 import Stratify.Pretty.Doc
 import Stratify.Ppr
+import Stratify.Utils
 
 import Data.Foldable (fold)
 
@@ -38,6 +39,7 @@ data Op' a
   | And (Term' a) (Term' a)
   | Or (Term' a) (Term' a)
 
+-- TODO: Make the Boolean type just be a sum type (after I add sum types)
 data Term' a
   = Var a
   | IntLit Int
@@ -64,6 +66,8 @@ data Term' a
   | Universe Int
   -- | Prop -- Impredicative universe of propositions
 
+
+
 derive instance Generic (Term' a) _
 derive instance Generic (Op' a) _
 
@@ -86,6 +90,21 @@ data IxName =
 instance Ppr IxName where
   pprDoc (IxName x i) = text x <> text "@" <> pprDoc i
 
+instance Eq IxName where
+  eq (IxName _ i) (IxName _ j) = i == j
+
+instance HasIx IxName where
+  getIx (IxName _ i) = i
+
+instance HasVar IxName where
+  isVar (IxName _ i) = Just i
+
+instance MkVar Term' IxName where
+  mkVar = Var
+
+derive instance Eq a => Eq (Term' a)
+derive instance Eq a => Eq (Op' a)
+
 derive instance Generic IxName _
 instance Show IxName where show = genericShow
 
@@ -101,6 +120,37 @@ type SurfaceTerm = Term' Name
 
 derive instance Functor Term'
 derive instance Functor Op'
+
+instance Apply Term' where
+  apply = ap
+
+instance Applicative Term' where
+  pure = Var
+
+instance Bind Term' where
+  bind (Var x) f = f x
+  bind (IntLit i) _ = IntLit i
+  bind (BoolLit b) _ = BoolLit b
+  bind (Not x) f = Not (x >>= f)
+  bind (App x y) f = App (x >>= f) (y >>= f)
+  bind (If x y z) f = If (x >>= f) (y >>= f) (z >>= f)
+  bind (Lam x ty body) f = Lam x (ty >>= f) (body >>= f)
+  bind (The ty x) f = The (ty >>= f) (x >>= f)
+  bind (Forall x ty body) f = Forall x (ty >>= f) (body >>= f)
+  bind (Exists x ty body) f = Exists x (ty >>= f) (body >>= f)
+  bind IntType _ = IntType
+  bind BoolType _ = BoolType
+  bind (Universe k) _ = Universe k
+  bind (Op (Add x y)) f = Op (Add (x >>= f) (y >>= f))
+  bind (Op (Sub x y)) f = Op (Sub (x >>= f) (y >>= f))
+  bind (Op (Mul x y)) f = Op (Mul (x >>= f) (y >>= f))
+  bind (Op (Div x y)) f = Op (Div (x >>= f) (y >>= f))
+  bind (Op (Equal x y)) f = Op (Equal (x >>= f) (y >>= f))
+  bind (Op (Lt x y)) f = Op (Lt (x >>= f) (y >>= f))
+  bind (Op (And x y)) f = Op (And (x >>= f) (y >>= f))
+  bind (Op (Or x y)) f = Op (Or (x >>= f) (y >>= f))
+
+instance Monad Term'
 
 -- termPlate :: forall f a b. Applicative f =>
 --   (Term' a -> f (Term' b)) -> Term' a -> f (Term' b)
@@ -246,8 +296,6 @@ fnType = Forall mempty
 -- -- matchOp (Or x y) (Or x' y') = Just (Tuple x x' : Tuple y y' : Nil)
 -- -- matchOp _ _ = Nothing
 
--- derive instance functorOp :: Functor (Op' b)
--- derive instance functorTerm :: Functor (Term' b)
 -- derive instance eqOp :: (Eq b, Eq a) => Eq (Op' b a)
 -- derive instance eqTerm :: (Eq b, Eq a) => Eq (Term' b a)
 -- derive instance eq1Term :: Eq b => Eq1 (Term' b)

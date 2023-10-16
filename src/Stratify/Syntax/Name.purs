@@ -7,7 +7,8 @@ module Stratify.Syntax.Name
   , NameEnv
   , NamingCtx
   , NamingCtx'
-  , class HasIx
+  , class HasIx, getIx
+  , class HasVar
   , class MkVar
   , emptyNameEnv
   , emptyNamingCtx
@@ -17,6 +18,7 @@ module Stratify.Syntax.Name
   , ixHere
   , ixLevel
   , ixLookup
+  , lookup
   , ixToName
   , levelIx
   , liftNamingCtx
@@ -70,6 +72,12 @@ newtype NameEnv a = NameEnv (List a)
 ixLookup :: forall a. Ix -> NameEnv a -> Maybe a
 ixLookup (Ix i) (NameEnv xs) = xs !! i
 
+class HasIx a where
+  getIx :: a -> Ix
+
+lookup :: forall a b. HasIx a => a -> NameEnv b -> Maybe b
+lookup = ixLookup <<< getIx
+
 initialLevel :: Level
 initialLevel = Level 0
 
@@ -119,7 +127,7 @@ liftNamingCtx n nCtx =
       :
     nCtx'
 
-substHere :: forall f a. HasIx a => MkVar f a => Bind f =>
+substHere :: forall f a. HasVar a => MkVar f a => Bind f =>
   f a -> f a -> f a
 substHere e z = join $ map go e
   where
@@ -130,7 +138,7 @@ substHere e z = join $ map go e
         Just _ -> mkVar x
         Nothing -> mkVar x
 
-class HasIx a where
+class HasVar a where
   isVar :: a -> Maybe Ix
 
 class MkVar f a where

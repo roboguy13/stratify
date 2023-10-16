@@ -80,8 +80,22 @@ instance Ppr Value where
       Left e -> error e
       Right r -> pprDoc r
 
-nf :: Term -> Eval Term
-nf = quote initialLevel <=< eval emptyNameEnv
+nf' :: Term -> Eval Term
+nf' = quote initialLevel <=< eval emptyNameEnv
+
+nf :: Term -> Term
+nf x = case nf' x of
+  Left e -> error e
+  Right r -> r
+
+alphaEquiv :: Term -> Term -> Boolean
+alphaEquiv t u = nf t == nf u -- TODO: Use something more efficient
+
+evalClosure' :: Closure -> Value -> Value
+evalClosure' c val =
+  case evalClosure c val of
+    Left e -> error e
+    Right r -> r
 
 quote :: Level -> Value -> Eval Term
 quote depth (VIntLit i) = pure $ IntLit i
