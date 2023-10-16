@@ -12,6 +12,7 @@ import Parsing.Language
 import Parsing.Combinators
 import Parsing.Expr
 import Stratify.Syntax.Core.Term
+import Stratify.Syntax.Name
 import Stratify.Utils
 
 import Control.Applicative
@@ -123,10 +124,16 @@ parseOp = lexeme $
         ]
         parseTerm0
     where
+        theOp ::
+            (SurfaceTerm -> SurfaceTerm -> SurfaceOp) ->
+            SurfaceTerm -> SurfaceTerm -> SurfaceTerm
         theOp = ((Op <<< _) <<< _)
 
+binaryN ∷ ∀ a. String → (a → a → a) → Operator Identity String a
 binaryN x p = Infix (reservedOp x $> p) AssocNone
+binaryLeft ∷ ∀ a. String → (a → a → a) → Operator Identity String a
 binaryLeft x p = Infix (reservedOp x $> p) AssocLeft
+binaryRight ∷ ∀ a. String → (a → a → a) → Operator Identity String a
 binaryRight x p = Infix (reservedOp x $> p) AssocRight
 
 parseName' :: Parser String

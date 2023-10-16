@@ -33,38 +33,41 @@ typeError = Left
 type Context = NameEnv Type
 
 checkType :: Context -> Term -> Type -> TypeCheck Unit
-checkType ctx (Var x) ty =
-  case lookup x ctx of
-    Nothing -> typeError $ "Cannot find variable " <> ppr x
-    Just ty' -> requireSameType ty ty'
-checkType ctx (IntLit _) ty = requireSameType ty IntType
-checkType ctx (BoolLit _) ty = requireSameType ty BoolType
-checkType ctx (Op x) ty = checkOp ctx x ty
-checkType ctx (Not x) ty = do
-  checkType ctx x BoolType
-  requireSameType ty BoolType
-checkType ctx (App x y) ty = error "App"
-  -- xTy <- inferType ctx x
-  -- Tuple n (Tuple src tgtBody) <- isForall xTy
-  -- checkType ctx y src
-  -- ?a
-checkType ctx (Lam x argTy body) ty = do
-  Tuple _ (Tuple src tgtBody) <- isForall ty
-  -- let tyVal = evalClosure' argTy
-  let tgt = substHere tgtBody src
-  checkType (extend argTy ctx) body tgtBody
-checkType ctx (If x y z) ty = do
-  checkType ctx x BoolType
-  checkType ctx y ty
-  checkType ctx z ty
-checkType ctx (The ty' x) ty = do
-  requireSameType ty ty'
-  checkType ctx x ty'
-checkType ctx (Forall _ _ _) ty = ?a
-checkType ctx (Exists _ _ _) ty = ?a
-checkType ctx IntType ty = requireSameType ty (Universe 0)
-checkType ctx BoolType ty = requireSameType ty (Universe 0)
-checkType ctx (Universe k) ty = requireSameType ty (Universe (k + 1))
+checkType ctx x ty = do
+  xTy <- inferType ctx x
+  requireSameType ty xTy
+-- checkType ctx (Var x) ty =
+--   case lookup x ctx of
+--     Nothing -> typeError $ "Cannot find variable " <> ppr x
+--     Just ty' -> requireSameType ty ty'
+-- checkType ctx (IntLit _) ty = requireSameType ty IntType
+-- checkType ctx (BoolLit _) ty = requireSameType ty BoolType
+-- checkType ctx (Op x) ty = checkOp ctx x ty
+-- checkType ctx (Not x) ty = do
+--   checkType ctx x BoolType
+--   requireSameType ty BoolType
+-- checkType ctx (App x y) ty = error "App"
+--   -- xTy <- inferType ctx x
+--   -- Tuple n (Tuple src tgtBody) <- isForall xTy
+--   -- checkType ctx y src
+--   -- ?a
+-- checkType ctx (Lam x argTy body) ty = do
+--   Tuple _ (Tuple src tgtBody) <- isForall ty
+--   -- let tyVal = evalClosure' argTy
+--   let tgt = substHere tgtBody src
+--   checkType (extend argTy ctx) body tgtBody
+-- checkType ctx (If x y z) ty = do
+--   checkType ctx x BoolType
+--   checkType ctx y ty
+--   checkType ctx z ty
+-- checkType ctx (The ty' x) ty = do
+--   requireSameType ty ty'
+--   checkType ctx x ty'
+-- checkType ctx (Forall _ _ _) ty = ?a
+-- checkType ctx (Exists _ _ _) ty = ?a
+-- checkType ctx IntType ty = requireSameType ty (Universe 0)
+-- checkType ctx BoolType ty = requireSameType ty (Universe 0)
+-- checkType ctx (Universe k) ty = requireSameType ty (Universe (k + 1))
 
 isForall :: Type -> TypeCheck (Name /\ Type /\ Type)
 isForall (Forall x src tgt) = pure $ Tuple x (Tuple src tgt)
@@ -76,20 +79,65 @@ inferType ctx (Var x) =
   case lookup x ctx of
     Nothing -> typeError $ "Cannot find variable " <> ppr x
     Just ty' -> pure ty'
+
 inferType ctx (Forall x src tgtBody) = do
   k1 <- inferUniverse ctx src
   k2 <- inferUniverse (extend src ctx) tgtBody
   pure (Universe (max k1 k2))
+
+inferType ctx (Exists x src tgtBody) = do
+  k1 <- inferUniverse ctx src
+  k2 <- inferUniverse (extend src ctx) tgtBody
+  pure (Universe (max k1 k2))
+
 inferType ctx (App x y) = do
   Tuple x (Tuple src tgt) <- inferForall ctx x
   yTy <- inferType ctx y
   requireSameType src yTy
   pure $ substHere y tgt
+
 inferType ctx (Universe k) = pure (Universe (k + 1))
+
 inferType ctx (The ty x) = do
   checkType ctx x ty
   pure ty
+
+inferType ctx (Lam x ty body) = do
+  _ <- inferUniverse ctx ty
+  tBody <- inferType (extend ty ctx) body
+  pure $ Forall x ty tBody
+
+inferType ctx (If x y z) = do
+  checkType ctx x BoolType
+  yTy <- inferType ctx y
+  zTy <- inferType ctx z
+  requireSameType yTy zTy
+  pure yTy
+
+inferType ctx (Op (Add x y)) = checkBinOp ctx x y IntType IntType $> IntType
+inferType ctx (Op (Sub x y)) = checkBinOp ctx x y IntType IntType $> IntType
+inferType ctx (Op (Mul x y)) = checkBinOp ctx x y IntType IntType $> IntType
+inferType ctx (Op (Div x y)) = checkBinOp ctx x y IntType IntType $> IntType
+inferType ctx (Op (Equal x y)) = checkBinOp ctx x y IntType IntType $> BoolType
+inferType ctx (Op (Lt x y)) = checkBinOp ctx x y IntType IntType $> BoolType
+inferType ctx (Op (And x y)) = checkBinOp ctx x y BoolType BoolType $> BoolType
+inferType ctx (Op (Or x y)) = checkBinOp ctx x y BoolType BoolType $> BoolType
+
+inferType ctx (Not x) = do
+  checkType ctx x BoolType
+  pure BoolType
+
+inferType ctx (IntLit _) = pure IntType
+inferType ctx (BoolLit _) = pure BoolType
+
+inferType ctx IntType = pure $ Universe 0
+inferType ctx BoolType = pure $ Universe 0
 -- inferType ctx x = error "inferType"
+
+checkBinOp :: Context -> Term -> Term -> Type -> Type -> TypeCheck Unit
+checkBinOp ctx x y xTy yTy = do
+  checkType ctx x xTy
+  checkType ctx y yTy
 
 inferForall :: Context -> Term -> TypeCheck (Name /\ Type /\ Type)
 inferForall ctx x = do
@@ -112,7 +160,7 @@ requireSameType :: Type -> Type -> TypeCheck Unit
 requireSameType ty ty' =
   if alphaEquiv ty ty'
     then pure unit
-    else typeError $ "Type " <> show ty <> " does not match " <> show ty'
+    else typeError $ "Type " <> ppr ty <> " does not match " <> ppr ty'
 
 
 -- checkType :: Context -> Term -> Type -> TypeCheck Unit

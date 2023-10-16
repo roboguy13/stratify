@@ -122,6 +122,10 @@
   };
 
   // output/Control.Bind/index.js
+  var identity3 = /* @__PURE__ */ identity(categoryFn);
+  var discard = function(dict) {
+    return dict.discard;
+  };
   var bind = function(dict) {
     return dict.bind;
   };
@@ -138,13 +142,19 @@
       };
     };
   };
-
-  // output/Data.Semigroup/foreign.js
-  var concatString = function(s1) {
-    return function(s2) {
-      return s1 + s2;
+  var discardUnit = {
+    discard: function(dictBind) {
+      return bind(dictBind);
+    }
+  };
+  var join = function(dictBind) {
+    var bind12 = bind(dictBind);
+    return function(m) {
+      return bind12(m)(identity3);
     };
   };
+
+  // output/Data.Semigroup/foreign.js
   var concatArray = function(xs) {
     return function(ys) {
       if (xs.length === 0)
@@ -168,9 +178,6 @@
   };
 
   // output/Data.Semigroup/index.js
-  var semigroupString = {
-    append: concatString
-  };
   var semigroupArray = {
     append: concatArray
   };
@@ -193,11 +200,11 @@
 
   // output/Data.Ord/foreign.js
   var unsafeCompareImpl = function(lt) {
-    return function(eq3) {
+    return function(eq4) {
       return function(gt) {
         return function(x) {
           return function(y) {
-            return x < y ? lt : x === y ? eq3 : gt;
+            return x < y ? lt : x === y ? eq4 : gt;
           };
         };
       };
@@ -346,6 +353,27 @@
         }
         ;
         return false;
+      };
+    };
+  };
+  var max = function(dictOrd) {
+    var compare32 = compare(dictOrd);
+    return function(x) {
+      return function(y) {
+        var v = compare32(x)(y);
+        if (v instanceof LT) {
+          return y;
+        }
+        ;
+        if (v instanceof EQ) {
+          return x;
+        }
+        ;
+        if (v instanceof GT) {
+          return x;
+        }
+        ;
+        throw new Error("Failed pattern match at Data.Ord (line 181, column 3 - line 184, column 12): " + [v.constructor.name]);
       };
     };
   };
@@ -522,12 +550,52 @@
   };
 
   // output/Data.Generic.Rep/index.js
+  var Inl = /* @__PURE__ */ function() {
+    function Inl2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Inl2.create = function(value0) {
+      return new Inl2(value0);
+    };
+    return Inl2;
+  }();
+  var Inr = /* @__PURE__ */ function() {
+    function Inr2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Inr2.create = function(value0) {
+      return new Inr2(value0);
+    };
+    return Inr2;
+  }();
+  var Product = /* @__PURE__ */ function() {
+    function Product2(value0, value1) {
+      this.value0 = value0;
+      this.value1 = value1;
+    }
+    ;
+    Product2.create = function(value0) {
+      return function(value1) {
+        return new Product2(value0, value1);
+      };
+    };
+    return Product2;
+  }();
+  var NoArguments = /* @__PURE__ */ function() {
+    function NoArguments2() {
+    }
+    ;
+    NoArguments2.value = new NoArguments2();
+    return NoArguments2;
+  }();
   var from = function(dict) {
     return dict.from;
   };
 
   // output/Data.Maybe/index.js
-  var identity3 = /* @__PURE__ */ identity(categoryFn);
+  var identity4 = /* @__PURE__ */ identity(categoryFn);
   var Nothing = /* @__PURE__ */ function() {
     function Nothing2() {
     }
@@ -575,7 +643,7 @@
   };
   var map2 = /* @__PURE__ */ map(functorMaybe);
   var fromMaybe = function(a) {
-    return maybe(a)(identity3);
+    return maybe(a)(identity4);
   };
   var fromJust = function() {
     return function(v) {
@@ -740,13 +808,13 @@
 
   // output/Control.Monad/index.js
   var ap = function(dictMonad) {
-    var bind7 = bind(dictMonad.Bind1());
-    var pure8 = pure(dictMonad.Applicative0());
+    var bind8 = bind(dictMonad.Bind1());
+    var pure9 = pure(dictMonad.Applicative0());
     return function(f) {
       return function(a) {
-        return bind7(f)(function(f$prime) {
-          return bind7(a)(function(a$prime) {
-            return pure8(f$prime(a$prime));
+        return bind8(f)(function(f$prime) {
+          return bind8(a)(function(a$prime) {
+            return pure9(f$prime(a$prime));
           });
         });
       };
@@ -797,12 +865,6 @@
   };
 
   // output/Data.Monoid/index.js
-  var monoidString = {
-    mempty: "",
-    Semigroup0: function() {
-      return semigroupString;
-    }
-  };
   var mempty = function(dict) {
     return dict.mempty;
   };
@@ -1095,6 +1157,17 @@
   var snd = function(v) {
     return v.value1;
   };
+  var showTuple = function(dictShow) {
+    var show8 = show(dictShow);
+    return function(dictShow1) {
+      var show16 = show(dictShow1);
+      return {
+        show: function(v) {
+          return "(Tuple " + (show8(v.value0) + (" " + (show16(v.value1) + ")")));
+        }
+      };
+    };
+  };
   var functorTuple = {
     map: function(f) {
       return function(m) {
@@ -1241,13 +1314,13 @@
     }
     return function(apply3) {
       return function(map15) {
-        return function(pure8) {
+        return function(pure9) {
           return function(f) {
             return function(array) {
               function go2(bot, top3) {
                 switch (top3 - bot) {
                   case 0:
-                    return pure8([]);
+                    return pure9([]);
                   case 1:
                     return map15(array1)(f(array[bot]));
                   case 2:
@@ -1276,6 +1349,11 @@
 
   // output/Data.Show.Generic/index.js
   var append2 = /* @__PURE__ */ append(semigroupArray);
+  var genericShowArgsNoArguments = {
+    genericShowArgs: function(v) {
+      return [];
+    }
+  };
   var genericShowArgsArgument = function(dictShow) {
     var show8 = show(dictShow);
     return {
@@ -1286,6 +1364,17 @@
   };
   var genericShowArgs = function(dict) {
     return dict.genericShowArgs;
+  };
+  var genericShowArgsProduct = function(dictGenericShowArgs) {
+    var genericShowArgs1 = genericShowArgs(dictGenericShowArgs);
+    return function(dictGenericShowArgs1) {
+      var genericShowArgs2 = genericShowArgs(dictGenericShowArgs1);
+      return {
+        genericShowArgs: function(v) {
+          return append2(genericShowArgs1(v.value0))(genericShowArgs2(v.value1));
+        }
+      };
+    };
   };
   var genericShowConstructor = function(dictGenericShowArgs) {
     var genericShowArgs1 = genericShowArgs(dictGenericShowArgs);
@@ -1306,6 +1395,25 @@
   };
   var genericShow$prime = function(dict) {
     return dict["genericShow'"];
+  };
+  var genericShowSum = function(dictGenericShow) {
+    var genericShow$prime1 = genericShow$prime(dictGenericShow);
+    return function(dictGenericShow1) {
+      var genericShow$prime2 = genericShow$prime(dictGenericShow1);
+      return {
+        "genericShow'": function(v) {
+          if (v instanceof Inl) {
+            return genericShow$prime1(v.value0);
+          }
+          ;
+          if (v instanceof Inr) {
+            return genericShow$prime2(v.value0);
+          }
+          ;
+          throw new Error("Failed pattern match at Data.Show.Generic (line 26, column 1 - line 28, column 40): " + [v.constructor.name]);
+        }
+      };
+    };
   };
   var genericShow = function(dictGeneric) {
     var from2 = from(dictGeneric);
@@ -2842,11 +2950,11 @@
       var Alt0 = dictAlternative.Plus1().Alt0();
       var alt10 = alt(Alt0);
       var map15 = map(Alt0.Functor0());
-      var pure8 = pure(dictAlternative.Applicative0());
+      var pure9 = pure(dictAlternative.Applicative0());
       return function(p) {
         var go2 = function(acc) {
-          return bind12(alt10(map15(Loop.create)(p))(pure8(new Done(unit))))(function(aa) {
-            return pure8(bimap2(function(v) {
+          return bind12(alt10(map15(Loop.create)(p))(pure9(new Done(unit))))(function(aa) {
+            return pure9(bimap2(function(v) {
               return new Cons(v, acc);
             })(function(v) {
               return reverse2(acc);
@@ -2871,10 +2979,10 @@
   };
   var many2 = function(dictAlternative) {
     var alt10 = alt(dictAlternative.Plus1().Alt0());
-    var pure8 = pure(dictAlternative.Applicative0());
+    var pure9 = pure(dictAlternative.Applicative0());
     return function(dictLazy) {
       return function(v) {
-        return alt10(some2(dictAlternative)(dictLazy)(v))(pure8(Nil.value));
+        return alt10(some2(dictAlternative)(dictLazy)(v))(pure9(Nil.value));
       };
     };
   };
@@ -3283,9 +3391,9 @@
   };
   var pprNested = function(dictNested) {
     var isNested1 = isNested(dictNested);
-    var pprDoc12 = pprDoc(dictNested.Ppr0());
+    var pprDoc1 = pprDoc(dictNested.Ppr0());
     return function(x) {
-      return maybeParens(isNested1(x))(pprDoc12(x));
+      return maybeParens(isNested1(x))(pprDoc1(x));
     };
   };
 
@@ -3306,14 +3414,64 @@
   }();
 
   // output/Stratify.Syntax.Name/index.js
+  var pprDoc2 = /* @__PURE__ */ pprDoc(pprString);
   var show3 = /* @__PURE__ */ show(showInt);
+  var genericShowConstructor2 = /* @__PURE__ */ genericShowConstructor(/* @__PURE__ */ genericShowArgsArgument(showInt));
   var map7 = /* @__PURE__ */ map(functorList);
   var map1 = /* @__PURE__ */ map(functorTuple);
   var find3 = /* @__PURE__ */ find(foldableList);
+  var pprName = {
+    pprDoc: function(v) {
+      return pprDoc2(v);
+    }
+  };
   var pprIx = {
     pprDoc: function(v) {
       return text(show3(v));
     }
+  };
+  var isNameString = {
+    mkWildcardName: "",
+    isWildcardName: function(v) {
+      if (v === "") {
+        return true;
+      }
+      ;
+      return false;
+    }
+  };
+  var genericName_ = {
+    to: function(x) {
+      return x;
+    },
+    from: function(x) {
+      return x;
+    }
+  };
+  var genericShow3 = /* @__PURE__ */ genericShow(genericName_)(/* @__PURE__ */ genericShowConstructor(/* @__PURE__ */ genericShowArgsArgument(showString))({
+    reflectSymbol: function() {
+      return "Name";
+    }
+  }));
+  var showName = {
+    show: function(x) {
+      return genericShow3(x);
+    }
+  };
+  var genericLevel_ = {
+    to: function(x) {
+      return x;
+    },
+    from: function(x) {
+      return x;
+    }
+  };
+  var showLevel = {
+    show: /* @__PURE__ */ genericShow(genericLevel_)(/* @__PURE__ */ genericShowConstructor2({
+      reflectSymbol: function() {
+        return "Level";
+      }
+    }))
   };
   var functorNamingCtx$prime = {
     map: function(f) {
@@ -3323,6 +3481,21 @@
     }
   };
   var map22 = /* @__PURE__ */ map(functorNamingCtx$prime);
+  var eqName = {
+    eq: function(v) {
+      return function(v1) {
+        return true;
+      };
+    }
+  };
+  var eq12 = /* @__PURE__ */ eq(eqName);
+  var eqIx = {
+    eq: function(x) {
+      return function(y) {
+        return x === y;
+      };
+    }
+  };
   var shiftIx = function(v) {
     return v + 1 | 0;
   };
@@ -3331,10 +3504,10 @@
   };
   var nameToIx = function(v) {
     return function(n) {
-      var v1 = find3(function($109) {
+      var v1 = find3(function($143) {
         return function(v2) {
-          return v2 === n;
-        }(fst($109));
+          return eq12(v2)(n);
+        }(fst($143));
       })(v);
       if (v1 instanceof Just) {
         return v1.value0.value1;
@@ -3344,8 +3517,14 @@
         return error2("nameToIx");
       }
       ;
-      throw new Error("Failed pattern match at Stratify.Syntax.Name (line 102, column 3 - line 104, column 32): " + [v1.constructor.name]);
+      throw new Error("Failed pattern match at Stratify.Syntax.Name (line 142, column 3 - line 144, column 32): " + [v1.constructor.name]);
     };
+  };
+  var mkWildcardName = function(dict) {
+    return dict.mkWildcardName;
+  };
+  var mkVar = function(dict) {
+    return dict.mkVar;
   };
   var levelIx = function(v) {
     return function(v1) {
@@ -3364,7 +3543,60 @@
       return new Cons(new Tuple(n, ixHere), v);
     };
   };
+  var isWildcardName = function(dict) {
+    return dict.isWildcardName;
+  };
+  var isWildcardName1 = /* @__PURE__ */ isWildcardName(isNameString);
+  var isNameName = {
+    mkWildcardName: /* @__PURE__ */ mkWildcardName(isNameString),
+    isWildcardName: function(v) {
+      return isWildcardName1(v);
+    }
+  };
+  var isVar = function(dict) {
+    return dict.isVar;
+  };
+  var substHere = function(dictHasVar) {
+    var isVar1 = isVar(dictHasVar);
+    return function(dictMkVar) {
+      var mkVar1 = mkVar(dictMkVar);
+      return function(dictBind) {
+        var join2 = join(dictBind);
+        var map32 = map(dictBind.Apply0().Functor0());
+        return function(e) {
+          return function(z) {
+            var go2 = function(x) {
+              var v = isVar1(x);
+              if (v instanceof Just && v.value0 === 0) {
+                return z;
+              }
+              ;
+              if (v instanceof Just) {
+                return mkVar1(x);
+              }
+              ;
+              if (v instanceof Nothing) {
+                return mkVar1(x);
+              }
+              ;
+              throw new Error("Failed pattern match at Stratify.Syntax.Name (line 168, column 7 - line 171, column 27): " + [v.constructor.name]);
+            };
+            return join2(map32(go2)(e));
+          };
+        };
+      };
+    };
+  };
   var initialLevel = 0;
+  var getIx = function(dict) {
+    return dict.getIx;
+  };
+  var lookup = function(dictHasIx) {
+    var $145 = getIx(dictHasIx);
+    return function($146) {
+      return ixLookup($145($146));
+    };
+  };
   var extend2 = function(x) {
     return function(v) {
       return new Cons(x, v);
@@ -3378,11 +3610,25 @@
   }();
 
   // output/Stratify.Syntax.Core.Term/index.js
+  var $runtime_lazy5 = function(name15, moduleName, init3) {
+    var state3 = 0;
+    var val;
+    return function(lineNumber) {
+      if (state3 === 2)
+        return val;
+      if (state3 === 1)
+        throw new ReferenceError(name15 + " was needed before it finished initializing (module " + moduleName + ", line " + lineNumber + ")", moduleName, lineNumber);
+      state3 = 1;
+      val = init3();
+      state3 = 2;
+      return val;
+    };
+  };
   var append4 = /* @__PURE__ */ append(semigroupDoc);
-  var pprDoc2 = /* @__PURE__ */ pprDoc(pprIx);
+  var pprDoc3 = /* @__PURE__ */ pprDoc(pprIx);
   var show4 = /* @__PURE__ */ show(showInt);
   var show13 = /* @__PURE__ */ show(showBoolean);
-  var pprDoc1 = /* @__PURE__ */ pprDoc(pprString);
+  var eq2 = /* @__PURE__ */ eq(eqIx);
   var Add = /* @__PURE__ */ function() {
     function Add2(value0, value1) {
       this.value0 = value0;
@@ -3666,194 +3912,580 @@
   }();
   var pprIxName = {
     pprDoc: function(v) {
-      return append4(text(v.value0))(append4(text("@"))(pprDoc2(v.value1)));
+      return append4(text(v.value0))(append4(text("@"))(pprDoc3(v.value1)));
     }
   };
-  var pprTerm$prime = function(dictPpr) {
-    var pprDoc22 = pprDoc(dictPpr);
-    return {
-      pprDoc: function(v) {
-        if (v instanceof Var) {
-          return pprDoc22(v.value0);
-        }
-        ;
-        if (v instanceof IntLit) {
-          return text(show4(v.value0));
-        }
-        ;
-        if (v instanceof BoolLit) {
-          return text(show13(v.value0));
-        }
-        ;
-        if (v instanceof Op) {
-          return pprDoc(pprOp$prime(dictPpr))(v.value0);
-        }
-        ;
-        if (v instanceof Not) {
-          return pprNested(nestedTerm$prime(dictPpr))(v.value0);
-        }
-        ;
-        if (v instanceof App2) {
-          return besideSpace(pprNested(nestedTerm$prime(dictPpr))(v.value0))(pprNested(nestedTerm$prime(dictPpr))(v.value1));
-        }
-        ;
-        if (v instanceof Lam) {
-          return append4(text("\\"))(append4(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime(dictPpr))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime(dictPpr))(v.value2))));
-        }
-        ;
-        if (v instanceof If) {
-          return besideSpace(text("if"))(besideSpace(pprDoc(pprTerm$prime(dictPpr))(v.value0))(besideSpace(text("then"))(besideSpace(pprDoc(pprTerm$prime(dictPpr))(v.value1))(besideSpace(text("else"))(pprDoc(pprTerm$prime(dictPpr))(v.value1))))));
-        }
-        ;
-        if (v instanceof The) {
-          return besideSpace(text("the"))(besideSpace(pprNested(nestedTerm$prime(dictPpr))(v.value0))(pprNested(nestedTerm$prime(dictPpr))(v.value1)));
-        }
-        ;
-        if (v instanceof Forall) {
-          var $189 = $$null(v.value0);
-          if ($189) {
-            return besideSpace(pprDoc(pprTerm$prime(dictPpr))(v.value1))(besideSpace(text("->"))(pprDoc(pprTerm$prime(dictPpr))(v.value2)));
-          }
-          ;
-          return besideSpace(text("forall"))(append4(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime(dictPpr))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime(dictPpr))(v.value2))));
-        }
-        ;
-        if (v instanceof Exists) {
-          return besideSpace(text("exists"))(append4(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime(dictPpr))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime(dictPpr))(v.value2))));
-        }
-        ;
-        if (v instanceof IntType) {
-          return text("Int");
-        }
-        ;
-        if (v instanceof BoolType) {
-          return text("Bool");
-        }
-        ;
-        if (v instanceof Universe && v.value0 === 0) {
-          return text("Type");
-        }
-        ;
-        if (v instanceof Universe) {
-          return besideSpace(text("Type"))(text(show4(v.value0)));
-        }
-        ;
-        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 157, column 1 - line 175, column 54): " + [v.constructor.name]);
-      }
-    };
-  };
-  var pprOp$prime = function(dictPpr) {
-    return {
-      pprDoc: function(e) {
-        var pprBin = function(op) {
-          return function(x) {
-            return function(y) {
-              return besideSpace(pprDoc(pprTerm$prime(dictPpr))(x))(besideSpace(text(op))(pprDoc(pprTerm$prime(dictPpr))(y)));
-            };
+  var pprTerm$prime$prime = function(dictIsName) {
+    var isWildcardName2 = isWildcardName(dictIsName);
+    return function(dictIsName1) {
+      return function(dictPpr) {
+        var pprDoc1 = pprDoc(dictPpr);
+        return function(dictPpr1) {
+          var pprDoc22 = pprDoc(dictPpr1);
+          return {
+            pprDoc: function(v) {
+              if (v instanceof Var) {
+                return pprDoc22(v.value0);
+              }
+              ;
+              if (v instanceof IntLit) {
+                return text(show4(v.value0));
+              }
+              ;
+              if (v instanceof BoolLit) {
+                return text(show13(v.value0));
+              }
+              ;
+              if (v instanceof Op) {
+                return pprDoc(pprOp$prime$prime(dictIsName1)(dictIsName)(dictPpr)(dictPpr1))(v.value0);
+              }
+              ;
+              if (v instanceof Not) {
+                return pprNested(nestedTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value0);
+              }
+              ;
+              if (v instanceof App2) {
+                return besideSpace(pprNested(nestedTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value0))(pprNested(nestedTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1));
+              }
+              ;
+              if (v instanceof Lam) {
+                return append4(text("\\"))(append4(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))));
+              }
+              ;
+              if (v instanceof If) {
+                return besideSpace(text("if"))(besideSpace(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value0))(besideSpace(text("then"))(besideSpace(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1))(besideSpace(text("else"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1))))));
+              }
+              ;
+              if (v instanceof The) {
+                return besideSpace(text("the"))(besideSpace(pprNested(nestedTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value0))(pprNested(nestedTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)));
+              }
+              ;
+              if (v instanceof Forall) {
+                var $358 = isWildcardName2(v.value0);
+                if ($358) {
+                  return besideSpace(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1))(besideSpace(text("->"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value2)));
+                }
+                ;
+                return besideSpace(text("forall"))(append4(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))));
+              }
+              ;
+              if (v instanceof Exists) {
+                return besideSpace(text("exists"))(append4(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))));
+              }
+              ;
+              if (v instanceof IntType) {
+                return text("Int");
+              }
+              ;
+              if (v instanceof BoolType) {
+                return text("Bool");
+              }
+              ;
+              if (v instanceof Universe && v.value0 === 0) {
+                return text("Type");
+              }
+              ;
+              if (v instanceof Universe) {
+                return besideSpace(text("Type"))(text(show4(v.value0)));
+              }
+              ;
+              throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 225, column 1 - line 243, column 54): " + [v.constructor.name]);
+            }
           };
         };
-        if (e instanceof Add) {
-          return pprBin("+")(e.value0)(e.value1);
-        }
-        ;
-        if (e instanceof Sub) {
-          return pprBin("-")(e.value0)(e.value1);
-        }
-        ;
-        if (e instanceof Mul) {
-          return pprBin("*")(e.value0)(e.value1);
-        }
-        ;
-        if (e instanceof Div) {
-          return pprBin("/")(e.value0)(e.value1);
-        }
-        ;
-        if (e instanceof Equal) {
-          return pprBin("==")(e.value0)(e.value1);
-        }
-        ;
-        if (e instanceof Lt) {
-          return pprBin("<")(e.value0)(e.value1);
-        }
-        ;
-        if (e instanceof And) {
-          return pprBin("&&")(e.value0)(e.value1);
-        }
-        ;
-        if (e instanceof Or) {
-          return pprBin("||")(e.value0)(e.value1);
-        }
-        ;
-        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 194, column 14 - line 202, column 32): " + [e.constructor.name]);
-      }
+      };
     };
   };
-  var nestedTerm$prime = function(dictPpr) {
+  var pprOp$prime$prime = function(dictIsName) {
+    return function(dictIsName1) {
+      return function(dictPpr) {
+        return function(dictPpr1) {
+          return {
+            pprDoc: function(e) {
+              var pprBin = function(op) {
+                return function(x) {
+                  return function(y) {
+                    return besideSpace(pprDoc(pprTerm$prime$prime(dictIsName1)(dictIsName)(dictPpr)(dictPpr1))(x))(besideSpace(text(op))(pprDoc(pprTerm$prime$prime(dictIsName1)(dictIsName)(dictPpr)(dictPpr1))(y)));
+                  };
+                };
+              };
+              if (e instanceof Add) {
+                return pprBin("+")(e.value0)(e.value1);
+              }
+              ;
+              if (e instanceof Sub) {
+                return pprBin("-")(e.value0)(e.value1);
+              }
+              ;
+              if (e instanceof Mul) {
+                return pprBin("*")(e.value0)(e.value1);
+              }
+              ;
+              if (e instanceof Div) {
+                return pprBin("/")(e.value0)(e.value1);
+              }
+              ;
+              if (e instanceof Equal) {
+                return pprBin("==")(e.value0)(e.value1);
+              }
+              ;
+              if (e instanceof Lt) {
+                return pprBin("<")(e.value0)(e.value1);
+              }
+              ;
+              if (e instanceof And) {
+                return pprBin("&&")(e.value0)(e.value1);
+              }
+              ;
+              if (e instanceof Or) {
+                return pprBin("||")(e.value0)(e.value1);
+              }
+              ;
+              throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 262, column 14 - line 270, column 32): " + [e.constructor.name]);
+            }
+          };
+        };
+      };
+    };
+  };
+  var nestedTerm$prime$prime = function(dictIsName) {
+    return function(dictIsName1) {
+      return function(dictPpr) {
+        return function(dictPpr1) {
+          return {
+            isNested: function(v) {
+              if (v instanceof Var) {
+                return false;
+              }
+              ;
+              if (v instanceof IntLit) {
+                return false;
+              }
+              ;
+              if (v instanceof BoolLit) {
+                return false;
+              }
+              ;
+              if (v instanceof Op) {
+                return true;
+              }
+              ;
+              if (v instanceof App2) {
+                return true;
+              }
+              ;
+              if (v instanceof Lam) {
+                return true;
+              }
+              ;
+              if (v instanceof If) {
+                return true;
+              }
+              ;
+              if (v instanceof The) {
+                return true;
+              }
+              ;
+              if (v instanceof Universe) {
+                return true;
+              }
+              ;
+              if (v instanceof Forall) {
+                return true;
+              }
+              ;
+              if (v instanceof Exists) {
+                return true;
+              }
+              ;
+              if (v instanceof Not) {
+                return true;
+              }
+              ;
+              if (v instanceof IntType) {
+                return false;
+              }
+              ;
+              if (v instanceof BoolType) {
+                return false;
+              }
+              ;
+              throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 245, column 1 - line 259, column 28): " + [v.constructor.name]);
+            },
+            Ppr0: function() {
+              return pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1);
+            }
+          };
+        };
+      };
+    };
+  };
+  var mkVarTerm$prime$primeIxName = /* @__PURE__ */ function() {
     return {
-      isNested: function(v) {
+      mkVar: Var.create
+    };
+  }();
+  var isNameIxName = /* @__PURE__ */ function() {
+    return {
+      mkWildcardName: new IxName("", ixHere),
+      isWildcardName: function(v) {
+        if (v.value0 === "") {
+          return true;
+        }
+        ;
+        return false;
+      }
+    };
+  }();
+  var hasVarIxName = {
+    isVar: function(v) {
+      return new Just(v.value1);
+    }
+  };
+  var hasIxIxName = {
+    getIx: function(v) {
+      return v.value1;
+    }
+  };
+  var functorTerm$prime$prime = {
+    map: function(f) {
+      return function(m) {
+        if (m instanceof Var) {
+          return new Var(f(m.value0));
+        }
+        ;
+        if (m instanceof IntLit) {
+          return new IntLit(m.value0);
+        }
+        ;
+        if (m instanceof BoolLit) {
+          return new BoolLit(m.value0);
+        }
+        ;
+        if (m instanceof Op) {
+          return new Op(map(functorOp$prime$prime)(f)(m.value0));
+        }
+        ;
+        if (m instanceof Not) {
+          return new Not(map(functorTerm$prime$prime)(f)(m.value0));
+        }
+        ;
+        if (m instanceof App2) {
+          return new App2(map(functorTerm$prime$prime)(f)(m.value0), map(functorTerm$prime$prime)(f)(m.value1));
+        }
+        ;
+        if (m instanceof Lam) {
+          return new Lam(m.value0, map(functorTerm$prime$prime)(f)(m.value1), map(functorTerm$prime$prime)(f)(m.value2));
+        }
+        ;
+        if (m instanceof If) {
+          return new If(map(functorTerm$prime$prime)(f)(m.value0), map(functorTerm$prime$prime)(f)(m.value1), map(functorTerm$prime$prime)(f)(m.value2));
+        }
+        ;
+        if (m instanceof The) {
+          return new The(map(functorTerm$prime$prime)(f)(m.value0), map(functorTerm$prime$prime)(f)(m.value1));
+        }
+        ;
+        if (m instanceof Forall) {
+          return new Forall(m.value0, map(functorTerm$prime$prime)(f)(m.value1), map(functorTerm$prime$prime)(f)(m.value2));
+        }
+        ;
+        if (m instanceof Exists) {
+          return new Exists(m.value0, map(functorTerm$prime$prime)(f)(m.value1), map(functorTerm$prime$prime)(f)(m.value2));
+        }
+        ;
+        if (m instanceof IntType) {
+          return IntType.value;
+        }
+        ;
+        if (m instanceof BoolType) {
+          return BoolType.value;
+        }
+        ;
+        if (m instanceof Universe) {
+          return new Universe(m.value0);
+        }
+        ;
+        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 0, column 0 - line 0, column 0): " + [m.constructor.name]);
+      };
+    }
+  };
+  var functorOp$prime$prime = {
+    map: function(f) {
+      return function(m) {
+        if (m instanceof Add) {
+          return new Add(map(functorTerm$prime$prime)(f)(m.value0), map(functorTerm$prime$prime)(f)(m.value1));
+        }
+        ;
+        if (m instanceof Sub) {
+          return new Sub(map(functorTerm$prime$prime)(f)(m.value0), map(functorTerm$prime$prime)(f)(m.value1));
+        }
+        ;
+        if (m instanceof Mul) {
+          return new Mul(map(functorTerm$prime$prime)(f)(m.value0), map(functorTerm$prime$prime)(f)(m.value1));
+        }
+        ;
+        if (m instanceof Div) {
+          return new Div(map(functorTerm$prime$prime)(f)(m.value0), map(functorTerm$prime$prime)(f)(m.value1));
+        }
+        ;
+        if (m instanceof Equal) {
+          return new Equal(map(functorTerm$prime$prime)(f)(m.value0), map(functorTerm$prime$prime)(f)(m.value1));
+        }
+        ;
+        if (m instanceof Lt) {
+          return new Lt(map(functorTerm$prime$prime)(f)(m.value0), map(functorTerm$prime$prime)(f)(m.value1));
+        }
+        ;
+        if (m instanceof And) {
+          return new And(map(functorTerm$prime$prime)(f)(m.value0), map(functorTerm$prime$prime)(f)(m.value1));
+        }
+        ;
+        if (m instanceof Or) {
+          return new Or(map(functorTerm$prime$prime)(f)(m.value0), map(functorTerm$prime$prime)(f)(m.value1));
+        }
+        ;
+        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 0, column 0 - line 0, column 0): " + [m.constructor.name]);
+      };
+    }
+  };
+  var eqTerm$prime$prime = function(dictEq) {
+    var eq32 = eq(dictEq);
+    return function(dictEq1) {
+      var eq4 = eq(dictEq1);
+      return {
+        eq: function(x) {
+          return function(y) {
+            if (x instanceof Var && y instanceof Var) {
+              return eq4(x.value0)(y.value0);
+            }
+            ;
+            if (x instanceof IntLit && y instanceof IntLit) {
+              return x.value0 === y.value0;
+            }
+            ;
+            if (x instanceof BoolLit && y instanceof BoolLit) {
+              return x.value0 === y.value0;
+            }
+            ;
+            if (x instanceof Op && y instanceof Op) {
+              return eq(eqOp$prime$prime(dictEq)(dictEq1))(x.value0)(y.value0);
+            }
+            ;
+            if (x instanceof Not && y instanceof Not) {
+              return eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value0)(y.value0);
+            }
+            ;
+            if (x instanceof App2 && y instanceof App2) {
+              return eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value0)(y.value0) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value1)(y.value1);
+            }
+            ;
+            if (x instanceof Lam && y instanceof Lam) {
+              return eq32(x.value0)(y.value0) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value1)(y.value1) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value2)(y.value2);
+            }
+            ;
+            if (x instanceof If && y instanceof If) {
+              return eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value0)(y.value0) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value1)(y.value1) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value2)(y.value2);
+            }
+            ;
+            if (x instanceof The && y instanceof The) {
+              return eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value0)(y.value0) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value1)(y.value1);
+            }
+            ;
+            if (x instanceof Forall && y instanceof Forall) {
+              return eq32(x.value0)(y.value0) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value1)(y.value1) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value2)(y.value2);
+            }
+            ;
+            if (x instanceof Exists && y instanceof Exists) {
+              return eq32(x.value0)(y.value0) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value1)(y.value1) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value2)(y.value2);
+            }
+            ;
+            if (x instanceof IntType && y instanceof IntType) {
+              return true;
+            }
+            ;
+            if (x instanceof BoolType && y instanceof BoolType) {
+              return true;
+            }
+            ;
+            if (x instanceof Universe && y instanceof Universe) {
+              return x.value0 === y.value0;
+            }
+            ;
+            return false;
+          };
+        }
+      };
+    };
+  };
+  var eqOp$prime$prime = function(dictEq) {
+    return function(dictEq1) {
+      return {
+        eq: function(x) {
+          return function(y) {
+            if (x instanceof Add && y instanceof Add) {
+              return eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value0)(y.value0) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value1)(y.value1);
+            }
+            ;
+            if (x instanceof Sub && y instanceof Sub) {
+              return eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value0)(y.value0) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value1)(y.value1);
+            }
+            ;
+            if (x instanceof Mul && y instanceof Mul) {
+              return eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value0)(y.value0) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value1)(y.value1);
+            }
+            ;
+            if (x instanceof Div && y instanceof Div) {
+              return eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value0)(y.value0) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value1)(y.value1);
+            }
+            ;
+            if (x instanceof Equal && y instanceof Equal) {
+              return eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value0)(y.value0) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value1)(y.value1);
+            }
+            ;
+            if (x instanceof Lt && y instanceof Lt) {
+              return eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value0)(y.value0) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value1)(y.value1);
+            }
+            ;
+            if (x instanceof And && y instanceof And) {
+              return eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value0)(y.value0) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value1)(y.value1);
+            }
+            ;
+            if (x instanceof Or && y instanceof Or) {
+              return eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value0)(y.value0) && eq(eqTerm$prime$prime(dictEq)(dictEq1))(x.value1)(y.value1);
+            }
+            ;
+            return false;
+          };
+        }
+      };
+    };
+  };
+  var eqIxName = {
+    eq: function(v) {
+      return function(v1) {
+        return eq2(v.value1)(v1.value1);
+      };
+    }
+  };
+  var monadTerm$prime$prime = {
+    Applicative0: function() {
+      return applicativeTerm$prime$prime;
+    },
+    Bind1: function() {
+      return bindTerm$prime$prime;
+    }
+  };
+  var bindTerm$prime$prime = {
+    bind: function(v) {
+      return function(v1) {
         if (v instanceof Var) {
-          return false;
+          return v1(v.value0);
         }
         ;
         if (v instanceof IntLit) {
-          return false;
+          return new IntLit(v.value0);
         }
         ;
         if (v instanceof BoolLit) {
-          return false;
-        }
-        ;
-        if (v instanceof Op) {
-          return true;
-        }
-        ;
-        if (v instanceof App2) {
-          return true;
-        }
-        ;
-        if (v instanceof Lam) {
-          return true;
-        }
-        ;
-        if (v instanceof If) {
-          return true;
-        }
-        ;
-        if (v instanceof The) {
-          return true;
-        }
-        ;
-        if (v instanceof Universe) {
-          return true;
-        }
-        ;
-        if (v instanceof Forall) {
-          return true;
-        }
-        ;
-        if (v instanceof Exists) {
-          return true;
+          return new BoolLit(v.value0);
         }
         ;
         if (v instanceof Not) {
-          return true;
+          return new Not(bind(bindTerm$prime$prime)(v.value0)(v1));
+        }
+        ;
+        if (v instanceof App2) {
+          return new App2(bind(bindTerm$prime$prime)(v.value0)(v1), bind(bindTerm$prime$prime)(v.value1)(v1));
+        }
+        ;
+        if (v instanceof If) {
+          return new If(bind(bindTerm$prime$prime)(v.value0)(v1), bind(bindTerm$prime$prime)(v.value1)(v1), bind(bindTerm$prime$prime)(v.value2)(v1));
+        }
+        ;
+        if (v instanceof Lam) {
+          return new Lam(v.value0, bind(bindTerm$prime$prime)(v.value1)(v1), bind(bindTerm$prime$prime)(v.value2)(v1));
+        }
+        ;
+        if (v instanceof The) {
+          return new The(bind(bindTerm$prime$prime)(v.value0)(v1), bind(bindTerm$prime$prime)(v.value1)(v1));
+        }
+        ;
+        if (v instanceof Forall) {
+          return new Forall(v.value0, bind(bindTerm$prime$prime)(v.value1)(v1), bind(bindTerm$prime$prime)(v.value2)(v1));
+        }
+        ;
+        if (v instanceof Exists) {
+          return new Exists(v.value0, bind(bindTerm$prime$prime)(v.value1)(v1), bind(bindTerm$prime$prime)(v.value2)(v1));
         }
         ;
         if (v instanceof IntType) {
-          return false;
+          return IntType.value;
         }
         ;
         if (v instanceof BoolType) {
-          return false;
+          return BoolType.value;
         }
         ;
-        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 177, column 1 - line 191, column 28): " + [v.constructor.name]);
-      },
-      Ppr0: function() {
-        return pprTerm$prime(dictPpr);
+        if (v instanceof Universe) {
+          return new Universe(v.value0);
+        }
+        ;
+        if (v instanceof Op && v.value0 instanceof Add) {
+          return new Op(new Add(bind(bindTerm$prime$prime)(v.value0.value0)(v1), bind(bindTerm$prime$prime)(v.value0.value1)(v1)));
+        }
+        ;
+        if (v instanceof Op && v.value0 instanceof Sub) {
+          return new Op(new Sub(bind(bindTerm$prime$prime)(v.value0.value0)(v1), bind(bindTerm$prime$prime)(v.value0.value1)(v1)));
+        }
+        ;
+        if (v instanceof Op && v.value0 instanceof Mul) {
+          return new Op(new Mul(bind(bindTerm$prime$prime)(v.value0.value0)(v1), bind(bindTerm$prime$prime)(v.value0.value1)(v1)));
+        }
+        ;
+        if (v instanceof Op && v.value0 instanceof Div) {
+          return new Op(new Div(bind(bindTerm$prime$prime)(v.value0.value0)(v1), bind(bindTerm$prime$prime)(v.value0.value1)(v1)));
+        }
+        ;
+        if (v instanceof Op && v.value0 instanceof Equal) {
+          return new Op(new Equal(bind(bindTerm$prime$prime)(v.value0.value0)(v1), bind(bindTerm$prime$prime)(v.value0.value1)(v1)));
+        }
+        ;
+        if (v instanceof Op && v.value0 instanceof Lt) {
+          return new Op(new Lt(bind(bindTerm$prime$prime)(v.value0.value0)(v1), bind(bindTerm$prime$prime)(v.value0.value1)(v1)));
+        }
+        ;
+        if (v instanceof Op && v.value0 instanceof And) {
+          return new Op(new And(bind(bindTerm$prime$prime)(v.value0.value0)(v1), bind(bindTerm$prime$prime)(v.value0.value1)(v1)));
+        }
+        ;
+        if (v instanceof Op && v.value0 instanceof Or) {
+          return new Op(new Or(bind(bindTerm$prime$prime)(v.value0.value0)(v1), bind(bindTerm$prime$prime)(v.value0.value1)(v1)));
+        }
+        ;
+        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 144, column 1 - line 165, column 53): " + [v.constructor.name, v1.constructor.name]);
+      };
+    },
+    Apply0: function() {
+      return $lazy_applyTerm$prime$prime(0);
+    }
+  };
+  var applicativeTerm$prime$prime = /* @__PURE__ */ function() {
+    return {
+      pure: Var.create,
+      Apply0: function() {
+        return $lazy_applyTerm$prime$prime(0);
       }
     };
-  };
+  }();
+  var $lazy_applyTerm$prime$prime = /* @__PURE__ */ $runtime_lazy5("applyTerm''", "Stratify.Syntax.Core.Term", function() {
+    return {
+      apply: ap(monadTerm$prime$prime),
+      Functor0: function() {
+        return functorTerm$prime$prime;
+      }
+    };
+  });
   var overOp = function(v) {
     return function(v1) {
       if (v1 instanceof Add) {
@@ -3888,7 +4520,7 @@
         return new Or(v(v1.value0), v(v1.value1));
       }
       ;
-      throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 109, column 1 - line 109, column 61): " + [v.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 173, column 1 - line 173, column 77): " + [v.constructor.name, v1.constructor.name]);
     };
   };
   var fromNamed = /* @__PURE__ */ function() {
@@ -3965,16 +4597,123 @@
           return new Universe(v1.value0);
         }
         ;
-        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 122, column 5 - line 122, column 43): " + [v.constructor.name, v1.constructor.name]);
+        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 186, column 5 - line 186, column 43): " + [v.constructor.name, v1.constructor.name]);
       };
     };
     return go2(emptyNamingCtx);
   }();
-  var fnType = /* @__PURE__ */ function() {
-    return Forall.create(mempty(monoidString));
-  }();
+  var fnType = function(dictIsName) {
+    return Forall.create(mkWildcardName(dictIsName));
+  };
 
   // output/Stratify.Eval.NbE/index.js
+  var genericShowConstructor3 = /* @__PURE__ */ genericShowConstructor(/* @__PURE__ */ genericShowArgsArgument(showInt));
+  var genericShowSum2 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor3({
+    reflectSymbol: function() {
+      return "VIntLit";
+    }
+  }));
+  var genericShowSum1 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor(/* @__PURE__ */ genericShowArgsArgument(showBoolean))({
+    reflectSymbol: function() {
+      return "VBoolLit";
+    }
+  }));
+  var VLamIsSymbol = {
+    reflectSymbol: function() {
+      return "VLam";
+    }
+  };
+  var VForallIsSymbol = {
+    reflectSymbol: function() {
+      return "VForall";
+    }
+  };
+  var VExistsIsSymbol = {
+    reflectSymbol: function() {
+      return "VExists";
+    }
+  };
+  var genericShowConstructor1 = /* @__PURE__ */ genericShowConstructor(genericShowArgsNoArguments);
+  var genericShowSum22 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor1({
+    reflectSymbol: function() {
+      return "VIntType";
+    }
+  }));
+  var genericShowSum3 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor1({
+    reflectSymbol: function() {
+      return "VBoolType";
+    }
+  }));
+  var genericShowSum4 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor3({
+    reflectSymbol: function() {
+      return "VUniverse";
+    }
+  }));
+  var VNeutralIsSymbol = {
+    reflectSymbol: function() {
+      return "VNeutral";
+    }
+  };
+  var genericShowSum5 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor(/* @__PURE__ */ genericShowArgsProduct(/* @__PURE__ */ genericShowArgsArgument(showName))(/* @__PURE__ */ genericShowArgsArgument(showLevel)))({
+    reflectSymbol: function() {
+      return "NVar";
+    }
+  }));
+  var NAddIsSymbol = {
+    reflectSymbol: function() {
+      return "NAdd";
+    }
+  };
+  var NSubIsSymbol = {
+    reflectSymbol: function() {
+      return "NSub";
+    }
+  };
+  var NMulIsSymbol = {
+    reflectSymbol: function() {
+      return "NMul";
+    }
+  };
+  var NDivIsSymbol = {
+    reflectSymbol: function() {
+      return "NDiv";
+    }
+  };
+  var NEqualIsSymbol = {
+    reflectSymbol: function() {
+      return "NEqual";
+    }
+  };
+  var NLtIsSymbol = {
+    reflectSymbol: function() {
+      return "NLt";
+    }
+  };
+  var NAndIsSymbol = {
+    reflectSymbol: function() {
+      return "NAnd";
+    }
+  };
+  var NOrIsSymbol = {
+    reflectSymbol: function() {
+      return "NOr";
+    }
+  };
+  var NNotIsSymbol = {
+    reflectSymbol: function() {
+      return "NNot";
+    }
+  };
+  var NAppIsSymbol = {
+    reflectSymbol: function() {
+      return "NApp";
+    }
+  };
+  var NIfIsSymbol = {
+    reflectSymbol: function() {
+      return "NIf";
+    }
+  };
   var pure3 = /* @__PURE__ */ pure(applicativeEither);
   var map8 = /* @__PURE__ */ map(functorEither);
   var apply2 = /* @__PURE__ */ apply(applyEither);
@@ -3983,13 +4722,14 @@
   var sub2 = /* @__PURE__ */ sub(ringInt);
   var mul2 = /* @__PURE__ */ mul(semiringInt);
   var div3 = /* @__PURE__ */ div(euclideanRingInt);
-  var eq2 = /* @__PURE__ */ eq(eqInt);
+  var eq3 = /* @__PURE__ */ eq(eqInt);
   var lessThan2 = /* @__PURE__ */ lessThan(ordInt);
   var conj2 = /* @__PURE__ */ conj(heytingAlgebraBoolean);
   var disj2 = /* @__PURE__ */ disj(heytingAlgebraBoolean);
   var show5 = /* @__PURE__ */ show(showString);
   var not2 = /* @__PURE__ */ not(heytingAlgebraBoolean);
   var bind3 = /* @__PURE__ */ bind(bindEither);
+  var eq13 = /* @__PURE__ */ eq(/* @__PURE__ */ eqTerm$prime$prime(eqName)(eqIxName));
   var Closure = /* @__PURE__ */ function() {
     function Closure2(value0) {
       this.value0 = value0;
@@ -4249,6 +4989,209 @@
     };
     return NIf2;
   }();
+  var showClosure = {
+    show: function(v) {
+      return "<closure>";
+    }
+  };
+  var genericShowArgsArgument2 = /* @__PURE__ */ genericShowArgsArgument(showClosure);
+  var genericValue_ = {
+    to: function(x) {
+      if (x instanceof Inl) {
+        return new VIntLit(x.value0);
+      }
+      ;
+      if (x instanceof Inr && x.value0 instanceof Inl) {
+        return new VBoolLit(x.value0.value0);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && x.value0.value0 instanceof Inl)) {
+        return new VLam(x.value0.value0.value0.value0, x.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && x.value0.value0.value0 instanceof Inl))) {
+        return new VForall(x.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0 instanceof Inl)))) {
+        return new VExists(x.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0 instanceof Inl))))) {
+        return VIntType.value;
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0 instanceof Inl)))))) {
+        return VBoolType.value;
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0 instanceof Inl))))))) {
+        return new VUniverse(x.value0.value0.value0.value0.value0.value0.value0.value0);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr))))))) {
+        return new VNeutral(x.value0.value0.value0.value0.value0.value0.value0.value0);
+      }
+      ;
+      throw new Error("Failed pattern match at Stratify.Eval.NbE (line 66, column 1 - line 66, column 32): " + [x.constructor.name]);
+    },
+    from: function(x) {
+      if (x instanceof VIntLit) {
+        return new Inl(x.value0);
+      }
+      ;
+      if (x instanceof VBoolLit) {
+        return new Inr(new Inl(x.value0));
+      }
+      ;
+      if (x instanceof VLam) {
+        return new Inr(new Inr(new Inl(new Product(x.value0, x.value1))));
+      }
+      ;
+      if (x instanceof VForall) {
+        return new Inr(new Inr(new Inr(new Inl(new Product(x.value0, x.value1)))));
+      }
+      ;
+      if (x instanceof VExists) {
+        return new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, x.value1))))));
+      }
+      ;
+      if (x instanceof VIntType) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value))))));
+      }
+      ;
+      if (x instanceof VBoolType) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value)))))));
+      }
+      ;
+      if (x instanceof VUniverse) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(x.value0))))))));
+      }
+      ;
+      if (x instanceof VNeutral) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(x.value0))))))));
+      }
+      ;
+      throw new Error("Failed pattern match at Stratify.Eval.NbE (line 66, column 1 - line 66, column 32): " + [x.constructor.name]);
+    }
+  };
+  var genericShow4 = /* @__PURE__ */ genericShow(genericValue_);
+  var genericNeutral_ = {
+    to: function(x) {
+      if (x instanceof Inl) {
+        return new NVar(x.value0.value0, x.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && x.value0 instanceof Inl) {
+        return new NAdd(x.value0.value0.value0, x.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && x.value0.value0 instanceof Inl)) {
+        return new NSub(x.value0.value0.value0.value0, x.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && x.value0.value0.value0 instanceof Inl))) {
+        return new NMul(x.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0 instanceof Inl)))) {
+        return new NDiv(x.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0 instanceof Inl))))) {
+        return new NEqual(x.value0.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0 instanceof Inl)))))) {
+        return new NLt(x.value0.value0.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0 instanceof Inl))))))) {
+        return new NAnd(x.value0.value0.value0.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inl)))))))) {
+        return new NOr(x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inl))))))))) {
+        return new NNot(x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inl)))))))))) {
+        return new NApp(x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr)))))))))) {
+        return new NIf(x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value1.value0, x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value1.value1);
+      }
+      ;
+      throw new Error("Failed pattern match at Stratify.Eval.NbE (line 67, column 1 - line 67, column 34): " + [x.constructor.name]);
+    },
+    from: function(x) {
+      if (x instanceof NVar) {
+        return new Inl(new Product(x.value0, x.value1));
+      }
+      ;
+      if (x instanceof NAdd) {
+        return new Inr(new Inl(new Product(x.value0, x.value1)));
+      }
+      ;
+      if (x instanceof NSub) {
+        return new Inr(new Inr(new Inl(new Product(x.value0, x.value1))));
+      }
+      ;
+      if (x instanceof NMul) {
+        return new Inr(new Inr(new Inr(new Inl(new Product(x.value0, x.value1)))));
+      }
+      ;
+      if (x instanceof NDiv) {
+        return new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, x.value1))))));
+      }
+      ;
+      if (x instanceof NEqual) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, x.value1)))))));
+      }
+      ;
+      if (x instanceof NLt) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, x.value1))))))));
+      }
+      ;
+      if (x instanceof NAnd) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, x.value1)))))))));
+      }
+      ;
+      if (x instanceof NOr) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, x.value1))))))))));
+      }
+      ;
+      if (x instanceof NNot) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(x.value0))))))))));
+      }
+      ;
+      if (x instanceof NApp) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, x.value1))))))))))));
+      }
+      ;
+      if (x instanceof NIf) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Product(x.value0, new Product(x.value1, x.value2)))))))))))));
+      }
+      ;
+      throw new Error("Failed pattern match at Stratify.Eval.NbE (line 67, column 1 - line 67, column 34): " + [x.constructor.name]);
+    }
+  };
+  var genericShow1 = /* @__PURE__ */ genericShow(genericNeutral_);
+  var showValue = {
+    show: function(x) {
+      return genericShow4(genericShowSum2(genericShowSum1(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showValue))(genericShowArgsArgument2))(VLamIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showValue))(genericShowArgsArgument2))(VForallIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showValue))(genericShowArgsArgument2))(VExistsIsSymbol))(genericShowSum22(genericShowSum3(genericShowSum4(genericShowConstructor(genericShowArgsArgument(showNeutral))(VNeutralIsSymbol))))))))))(x);
+    }
+  };
+  var showNeutral = {
+    show: function(x) {
+      return genericShow1(genericShowSum5(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NAddIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NSubIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NMulIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NDivIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NEqualIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NLtIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NAndIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NOrIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsArgument(showNeutral))(NNotIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NAppIsSymbol))(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsProduct(genericShowArgsArgument(showValue))(genericShowArgsArgument(showValue))))(NIfIsSymbol)))))))))))))(x);
+    }
+  };
+  var show14 = /* @__PURE__ */ show(/* @__PURE__ */ showTuple(showValue)(showValue));
   var quoteNeutral = function(v) {
     return function(v1) {
       if (v1 instanceof NVar) {
@@ -4299,7 +5242,7 @@
         return apply2(apply2(map8(If.create)(quoteNeutral(v)(v1.value0)))(quote(v)(v1.value1)))(quote(v)(v1.value2));
       }
       ;
-      throw new Error("Failed pattern match at Stratify.Eval.NbE (line 106, column 1 - line 106, column 46): " + [v.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Stratify.Eval.NbE (line 120, column 1 - line 120, column 46): " + [v.constructor.name, v1.constructor.name]);
     };
   };
   var quoteAbs = function(lvl) {
@@ -4345,7 +5288,7 @@
         return quoteNeutral(v)(v1.value0);
       }
       ;
-      throw new Error("Failed pattern match at Stratify.Eval.NbE (line 86, column 1 - line 86, column 37): " + [v.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Stratify.Eval.NbE (line 100, column 1 - line 100, column 37): " + [v.constructor.name, v1.constructor.name]);
     };
   };
   var liftIntOp2 = function(v) {
@@ -4418,7 +5361,7 @@
         return evalClosure(v.value1)(v1);
       }
       ;
-      return error2("evalApp");
+      return error2("evalApp: " + show14(new Tuple(v, v1)));
     };
   };
   var mkClosure = function(env) {
@@ -4452,7 +5395,7 @@
       }
       ;
       if (v1 instanceof Equal) {
-        return apply2(map8(liftIntOp2(eq2)(VBoolLit.create)(NEqual.create))($$eval(v)(v1.value0)))($$eval(v)(v1.value1));
+        return apply2(map8(liftIntOp2(eq3)(VBoolLit.create)(NEqual.create))($$eval(v)(v1.value0)))($$eval(v)(v1.value1));
       }
       ;
       if (v1 instanceof Lt) {
@@ -4467,7 +5410,7 @@
         return apply2(map8(liftBoolOp2(disj2)(VBoolLit.create)(NOr.create))($$eval(v)(v1.value0)))($$eval(v)(v1.value1));
       }
       ;
-      throw new Error("Failed pattern match at Stratify.Eval.NbE (line 148, column 1 - line 148, column 34): " + [v.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Stratify.Eval.NbE (line 162, column 1 - line 162, column 34): " + [v.constructor.name, v1.constructor.name]);
     };
   };
   var evalIf = function(v) {
@@ -4503,7 +5446,7 @@
           return new Left("Cannot find variable " + show5(v1.value0.value0));
         }
         ;
-        throw new Error("Failed pattern match at Stratify.Eval.NbE (line 126, column 3 - line 128, column 56): " + [v2.constructor.name]);
+        throw new Error("Failed pattern match at Stratify.Eval.NbE (line 140, column 3 - line 142, column 56): " + [v2.constructor.name]);
       }
       ;
       if (v1 instanceof IntLit) {
@@ -4564,10 +5507,27 @@
         return pure3(new VUniverse(v1.value0));
       }
       ;
-      throw new Error("Failed pattern match at Stratify.Eval.NbE (line 124, column 1 - line 124, column 34): " + [v.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Stratify.Eval.NbE (line 138, column 1 - line 138, column 34): " + [v.constructor.name, v1.constructor.name]);
     };
   };
-  var nf = /* @__PURE__ */ composeKleisliFlipped(bindEither)(/* @__PURE__ */ quote(initialLevel))(/* @__PURE__ */ $$eval(emptyNameEnv));
+  var nf$prime = /* @__PURE__ */ composeKleisliFlipped(bindEither)(/* @__PURE__ */ quote(initialLevel))(/* @__PURE__ */ $$eval(emptyNameEnv));
+  var nf = function(x) {
+    var v = nf$prime(x);
+    if (v instanceof Left) {
+      return error2(v.value0);
+    }
+    ;
+    if (v instanceof Right) {
+      return v.value0;
+    }
+    ;
+    throw new Error("Failed pattern match at Stratify.Eval.NbE (line 87, column 8 - line 89, column 15): " + [v.constructor.name]);
+  };
+  var alphaEquiv = function(t) {
+    return function(u) {
+      return eq13(nf(t))(nf(u));
+    };
+  };
 
   // output/Parsing.Expr/index.js
   var bind4 = /* @__PURE__ */ bind(bindParserT);
@@ -4575,7 +5535,7 @@
   var alt3 = /* @__PURE__ */ alt(altParserT);
   var foldr2 = /* @__PURE__ */ foldr(foldableArray);
   var choice2 = /* @__PURE__ */ choice(foldableList);
-  var identity4 = /* @__PURE__ */ identity(categoryFn);
+  var identity5 = /* @__PURE__ */ identity(categoryFn);
   var foldl2 = /* @__PURE__ */ foldl(foldableArray);
   var AssocNone = /* @__PURE__ */ function() {
     function AssocNone2() {
@@ -4780,9 +5740,9 @@
       var lassocOp = choice2(accum.lassoc);
       var nassocOp = choice2(accum.nassoc);
       var postfixOp = withErrorMessage(choice2(accum.postfix))("");
-      var postfixP = alt3(postfixOp)(pure4(identity4));
+      var postfixP = alt3(postfixOp)(pure4(identity5));
       var prefixOp = withErrorMessage(choice2(accum.prefix))("");
-      var prefixP = alt3(prefixOp)(pure4(identity4));
+      var prefixP = alt3(prefixOp)(pure4(identity5));
       var rassocOp = choice2(accum.rassoc);
       return bind4(termP(prefixP)(term)(postfixP))(function(x) {
         return alt3(rassocP(x)(rassocOp)(prefixP)(term)(postfixP))(alt3(lassocP(x)(lassocOp)(prefixP)(term)(postfixP))(alt3(nassocP(x)(nassocOp)(prefixP)(term)(postfixP))(withErrorMessage(pure4(x))("operator"))));
@@ -26265,7 +27225,7 @@
 
   // output/Parsing.String.Basic/index.js
   var elem1 = /* @__PURE__ */ elem2(eqChar);
-  var show14 = /* @__PURE__ */ show(/* @__PURE__ */ showArray(showChar));
+  var show15 = /* @__PURE__ */ show(/* @__PURE__ */ showArray(showChar));
   var notElem1 = /* @__PURE__ */ notElem2(eqChar);
   var satisfyCP = function(p) {
     return satisfy(function($32) {
@@ -26276,13 +27236,13 @@
   var upper2 = /* @__PURE__ */ withErrorMessage(/* @__PURE__ */ satisfyCP(isUpper))("uppercase letter");
   var oneOf2 = function(ss) {
     return withLazyErrorMessage(satisfy(flip(elem1)(ss)))(function(v) {
-      return "one of " + show14(ss);
+      return "one of " + show15(ss);
     });
   };
   var octDigit = /* @__PURE__ */ withErrorMessage(/* @__PURE__ */ satisfyCP(isOctDigit))("oct digit");
   var noneOf = function(ss) {
     return withLazyErrorMessage(satisfy(flip(notElem1)(ss)))(function(v) {
-      return "none of " + show14(ss);
+      return "none of " + show15(ss);
     });
   };
   var letter = /* @__PURE__ */ withErrorMessage(/* @__PURE__ */ satisfyCP(isAlpha))("letter");
@@ -26313,7 +27273,7 @@
   var alt4 = /* @__PURE__ */ alt(altParserT);
   var $$void2 = /* @__PURE__ */ $$void(functorParserT);
   var voidLeft3 = /* @__PURE__ */ voidLeft(functorParserT);
-  var identity5 = /* @__PURE__ */ identity(categoryFn);
+  var identity6 = /* @__PURE__ */ identity(categoryFn);
   var many3 = /* @__PURE__ */ many(alternativeParserT)(lazyParserT);
   var map12 = /* @__PURE__ */ map(functorMaybe);
   var some3 = /* @__PURE__ */ some(alternativeParserT)(lazyParserT);
@@ -26453,7 +27413,7 @@
       return c !== '"' && (c !== "\\" && c > "");
     });
     var sign2 = function(dictRing) {
-      return alt4(voidLeft3($$char("-"))(negate(dictRing)))(alt4(voidLeft3($$char("+"))(identity5))(pure5(identity5)));
+      return alt4(voidLeft3($$char("-"))(negate(dictRing)))(alt4(voidLeft3($$char("+"))(identity6))(pure5(identity6)));
     };
     var sign1 = sign2(ringInt);
     var oper = function() {
@@ -26841,7 +27801,7 @@
   }();
 
   // output/Stratify.Syntax.Parser.Core/index.js
-  var $runtime_lazy5 = function(name15, moduleName, init3) {
+  var $runtime_lazy6 = function(name15, moduleName, init3) {
     var state3 = 0;
     var val;
     return function(lineNumber) {
@@ -26894,10 +27854,10 @@
         return v.value0;
       }
       ;
-      throw new Error("Failed pattern match at Stratify.Syntax.Parser.Core (line 88, column 13 - line 90, column 28): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Stratify.Syntax.Parser.Core (line 89, column 13 - line 91, column 28): " + [v.constructor.name]);
     };
-    return lexeme(map11(function($23) {
-      return IntLit.create(go2($23));
+    return lexeme(map11(function($24) {
+      return IntLit.create(go2($24));
     })(some4(digit)));
   }();
   var reservedOp = /* @__PURE__ */ function() {
@@ -26937,22 +27897,22 @@
       return new Infix(voidLeft4(reservedOp(x))(p), AssocLeft.value);
     };
   };
-  var $lazy_parseApp = /* @__PURE__ */ $runtime_lazy5("parseApp", "Stratify.Syntax.Parser.Core", function() {
+  var $lazy_parseApp = /* @__PURE__ */ $runtime_lazy6("parseApp", "Stratify.Syntax.Parser.Core", function() {
     return defer4(function(v) {
-      return bind6($lazy_parseTerm$prime(80))(function(f) {
-        return bind6(some4($lazy_parseTerm$prime(81)))(function(args) {
+      return bind6($lazy_parseTerm$prime(81))(function(f) {
+        return bind6(some4($lazy_parseTerm$prime(82)))(function(args) {
           return pure6(foldl4(App2.create)(f)(args));
         });
       });
     });
   });
-  var $lazy_parseIf = /* @__PURE__ */ $runtime_lazy5("parseIf", "Stratify.Syntax.Parser.Core", function() {
+  var $lazy_parseIf = /* @__PURE__ */ $runtime_lazy6("parseIf", "Stratify.Syntax.Parser.Core", function() {
     return lexeme(bind6(keyword("if"))(function() {
-      return bind6($lazy_parseTerm(100))(function(x) {
+      return bind6($lazy_parseTerm(101))(function(x) {
         return bind6(keyword("then"))(function() {
-          return bind6($lazy_parseTerm(102))(function(y) {
+          return bind6($lazy_parseTerm(103))(function(y) {
             return bind6(keyword("else"))(function() {
-              return bind6($lazy_parseTerm(104))(function(z) {
+              return bind6($lazy_parseTerm(105))(function(z) {
                 return pure6(new If(x, y, z));
               });
             });
@@ -26961,13 +27921,13 @@
       });
     }));
   });
-  var $lazy_parseLam = /* @__PURE__ */ $runtime_lazy5("parseLam", "Stratify.Syntax.Parser.Core", function() {
+  var $lazy_parseLam = /* @__PURE__ */ $runtime_lazy6("parseLam", "Stratify.Syntax.Parser.Core", function() {
     return bind6(symbol("\\"))(function() {
       return bind6(identifier)(function(x) {
         return bind6(symbol(":"))(function() {
-          return bind6($lazy_parseTerm(73))(function(ty) {
+          return bind6($lazy_parseTerm(74))(function(ty) {
             return bind6(symbol("."))(function() {
-              return bind6($lazy_parseTerm(75))(function(body) {
+              return bind6($lazy_parseTerm(76))(function(body) {
                 return pure6(new Lam(x, ty, body));
               });
             });
@@ -26976,36 +27936,234 @@
       });
     });
   });
-  var $lazy_parseOp = /* @__PURE__ */ $runtime_lazy5("parseOp", "Stratify.Syntax.Parser.Core", function() {
+  var $lazy_parseOp = /* @__PURE__ */ $runtime_lazy6("parseOp", "Stratify.Syntax.Parser.Core", function() {
     var theOp = function(v) {
-      return function($24) {
+      return function($25) {
         return function(v1) {
-          return function($25) {
-            return Op.create(v1($25));
+          return function($26) {
+            return Op.create(v1($26));
           };
-        }(v($24));
+        }(v($25));
       };
     };
-    return lexeme(buildExprParser([[binaryRight("->")(fnType)], [binaryN("==")(theOp(Equal.create)), binaryN("<")(theOp(Lt.create))], [binaryLeft("&&")(theOp(And.create)), binaryLeft("||")(theOp(Or.create))], [binaryLeft("*")(theOp(Mul.create)), binaryLeft("/")(theOp(Div.create)), binaryLeft("+")(theOp(Add.create)), binaryLeft("-")(theOp(Sub.create))]])($lazy_parseTerm0(124)));
+    return lexeme(buildExprParser([[binaryRight("->")(fnType(isNameString))], [binaryN("==")(theOp(Equal.create)), binaryN("<")(theOp(Lt.create))], [binaryLeft("&&")(theOp(And.create)), binaryLeft("||")(theOp(Or.create))], [binaryLeft("*")(theOp(Mul.create)), binaryLeft("/")(theOp(Div.create)), binaryLeft("+")(theOp(Add.create)), binaryLeft("-")(theOp(Sub.create))]])($lazy_parseTerm0(125)));
   });
-  var $lazy_parseTerm = /* @__PURE__ */ $runtime_lazy5("parseTerm", "Stratify.Syntax.Parser.Core", function() {
+  var $lazy_parseTerm = /* @__PURE__ */ $runtime_lazy6("parseTerm", "Stratify.Syntax.Parser.Core", function() {
     return defer4(function(v) {
-      return alt6($$try($lazy_parseIf(57)))(alt6($$try($lazy_parseOp(58)))(alt6($$try($lazy_parseLam(59)))($lazy_parseTerm0(60))));
+      return alt6($$try($lazy_parseIf(58)))(alt6($$try($lazy_parseOp(59)))(alt6($$try($lazy_parseLam(60)))($lazy_parseTerm0(61))));
     });
   });
-  var $lazy_parseTerm$prime = /* @__PURE__ */ $runtime_lazy5("parseTerm'", "Stratify.Syntax.Parser.Core", function() {
+  var $lazy_parseTerm$prime = /* @__PURE__ */ $runtime_lazy6("parseTerm'", "Stratify.Syntax.Parser.Core", function() {
     return alt6($$try($$parseInt))(alt6($$try(parseBool))(alt6($$try(map11(Var.create)(parseName$prime)))(alt6($$try(parseIntType))(alt6($$try(parseBoolType))(applyFirst(applyParserT)(applySecond(applyParserT)(symbol("("))(defer4(function(v) {
-      return $lazy_parseTerm(47);
+      return $lazy_parseTerm(48);
     })))(symbol(")")))))));
   });
-  var $lazy_parseTerm0 = /* @__PURE__ */ $runtime_lazy5("parseTerm0", "Stratify.Syntax.Parser.Core", function() {
+  var $lazy_parseTerm0 = /* @__PURE__ */ $runtime_lazy6("parseTerm0", "Stratify.Syntax.Parser.Core", function() {
     return alt6($$try(defer4(function(v) {
-      return $lazy_parseApp(52);
+      return $lazy_parseApp(53);
     })))(defer4(function(v) {
-      return $lazy_parseTerm$prime(53);
+      return $lazy_parseTerm$prime(54);
     }));
   });
-  var parseTerm = /* @__PURE__ */ $lazy_parseTerm(55);
+  var parseTerm = /* @__PURE__ */ $lazy_parseTerm(56);
+
+  // output/Stratify.TypeChecker.Core/index.js
+  var pure7 = /* @__PURE__ */ pure(applicativeEither);
+  var ppr2 = /* @__PURE__ */ ppr(/* @__PURE__ */ pprTerm$prime$prime(isNameName)(isNameIxName)(pprName)(pprIxName));
+  var bind7 = /* @__PURE__ */ bind(bindEither);
+  var lookup2 = /* @__PURE__ */ lookup(hasIxIxName);
+  var ppr1 = /* @__PURE__ */ ppr(pprIxName);
+  var max3 = /* @__PURE__ */ max(ordInt);
+  var discard2 = /* @__PURE__ */ discard(discardUnit)(bindEither);
+  var substHere2 = /* @__PURE__ */ substHere(hasVarIxName)(mkVarTerm$prime$primeIxName)(bindTerm$prime$prime);
+  var voidLeft5 = /* @__PURE__ */ voidLeft(functorEither);
+  var typeError = /* @__PURE__ */ function() {
+    return Left.create;
+  }();
+  var requireSameType = function(ty) {
+    return function(ty$prime) {
+      var $25 = alphaEquiv(ty)(ty$prime);
+      if ($25) {
+        return pure7(unit);
+      }
+      ;
+      return typeError("Type " + (ppr2(ty) + (" does not match " + ppr2(ty$prime))));
+    };
+  };
+  var inferUniverse = function(ctx) {
+    return function(ty) {
+      return bind7(inferType(ctx)(ty))(function(u) {
+        var v = nf(u);
+        if (v instanceof Universe) {
+          return pure7(v.value0);
+        }
+        ;
+        return typeError("Expected type, got " + ppr2(ty));
+      });
+    };
+  };
+  var inferType = function(v) {
+    return function(v1) {
+      if (v1 instanceof Var) {
+        var v2 = lookup2(v1.value0)(v);
+        if (v2 instanceof Nothing) {
+          return typeError("Cannot find variable " + ppr1(v1.value0));
+        }
+        ;
+        if (v2 instanceof Just) {
+          return pure7(v2.value0);
+        }
+        ;
+        throw new Error("Failed pattern match at Stratify.TypeChecker.Core (line 79, column 3 - line 81, column 25): " + [v2.constructor.name]);
+      }
+      ;
+      if (v1 instanceof Forall) {
+        return bind7(inferUniverse(v)(v1.value1))(function(k1) {
+          return bind7(inferUniverse(extend2(v1.value1)(v))(v1.value2))(function(k2) {
+            return pure7(new Universe(max3(k1)(k2)));
+          });
+        });
+      }
+      ;
+      if (v1 instanceof Exists) {
+        return bind7(inferUniverse(v)(v1.value1))(function(k1) {
+          return bind7(inferUniverse(extend2(v1.value1)(v))(v1.value2))(function(k2) {
+            return pure7(new Universe(max3(k1)(k2)));
+          });
+        });
+      }
+      ;
+      if (v1 instanceof App2) {
+        return bind7(inferForall(v)(v1.value0))(function(v22) {
+          return bind7(inferType(v)(v1.value1))(function(yTy) {
+            return discard2(requireSameType(v22.value1.value0)(yTy))(function() {
+              return pure7(substHere2(v1.value1)(v22.value1.value1));
+            });
+          });
+        });
+      }
+      ;
+      if (v1 instanceof Universe) {
+        return pure7(new Universe(v1.value0 + 1 | 0));
+      }
+      ;
+      if (v1 instanceof The) {
+        return discard2(checkType(v)(v1.value1)(v1.value0))(function() {
+          return pure7(v1.value0);
+        });
+      }
+      ;
+      if (v1 instanceof Lam) {
+        return bind7(inferUniverse(v)(v1.value1))(function() {
+          return bind7(inferType(extend2(v1.value1)(v))(v1.value2))(function(tBody) {
+            return pure7(new Forall(v1.value0, v1.value1, tBody));
+          });
+        });
+      }
+      ;
+      if (v1 instanceof If) {
+        return discard2(checkType(v)(v1.value0)(BoolType.value))(function() {
+          return bind7(inferType(v)(v1.value1))(function(yTy) {
+            return bind7(inferType(v)(v1.value2))(function(zTy) {
+              return discard2(requireSameType(yTy)(zTy))(function() {
+                return pure7(yTy);
+              });
+            });
+          });
+        });
+      }
+      ;
+      if (v1 instanceof Op && v1.value0 instanceof Add) {
+        return voidLeft5(checkBinOp(v)(v1.value0.value0)(v1.value0.value1)(IntType.value)(IntType.value))(IntType.value);
+      }
+      ;
+      if (v1 instanceof Op && v1.value0 instanceof Sub) {
+        return voidLeft5(checkBinOp(v)(v1.value0.value0)(v1.value0.value1)(IntType.value)(IntType.value))(IntType.value);
+      }
+      ;
+      if (v1 instanceof Op && v1.value0 instanceof Mul) {
+        return voidLeft5(checkBinOp(v)(v1.value0.value0)(v1.value0.value1)(IntType.value)(IntType.value))(IntType.value);
+      }
+      ;
+      if (v1 instanceof Op && v1.value0 instanceof Div) {
+        return voidLeft5(checkBinOp(v)(v1.value0.value0)(v1.value0.value1)(IntType.value)(IntType.value))(IntType.value);
+      }
+      ;
+      if (v1 instanceof Op && v1.value0 instanceof Equal) {
+        return voidLeft5(checkBinOp(v)(v1.value0.value0)(v1.value0.value1)(IntType.value)(IntType.value))(BoolType.value);
+      }
+      ;
+      if (v1 instanceof Op && v1.value0 instanceof Lt) {
+        return voidLeft5(checkBinOp(v)(v1.value0.value0)(v1.value0.value1)(IntType.value)(IntType.value))(BoolType.value);
+      }
+      ;
+      if (v1 instanceof Op && v1.value0 instanceof And) {
+        return voidLeft5(checkBinOp(v)(v1.value0.value0)(v1.value0.value1)(BoolType.value)(BoolType.value))(BoolType.value);
+      }
+      ;
+      if (v1 instanceof Op && v1.value0 instanceof Or) {
+        return voidLeft5(checkBinOp(v)(v1.value0.value0)(v1.value0.value1)(BoolType.value)(BoolType.value))(BoolType.value);
+      }
+      ;
+      if (v1 instanceof Not) {
+        return discard2(checkType(v)(v1.value0)(BoolType.value))(function() {
+          return pure7(BoolType.value);
+        });
+      }
+      ;
+      if (v1 instanceof IntLit) {
+        return pure7(IntType.value);
+      }
+      ;
+      if (v1 instanceof BoolLit) {
+        return pure7(BoolType.value);
+      }
+      ;
+      if (v1 instanceof IntType) {
+        return pure7(new Universe(0));
+      }
+      ;
+      if (v1 instanceof BoolType) {
+        return pure7(new Universe(0));
+      }
+      ;
+      throw new Error("Failed pattern match at Stratify.TypeChecker.Core (line 77, column 1 - line 77, column 47): " + [v.constructor.name, v1.constructor.name]);
+    };
+  };
+  var inferForall = function(ctx) {
+    return function(x) {
+      return bind7(inferType(ctx)(x))(function(ty) {
+        var v = nf(ty);
+        if (v instanceof Forall) {
+          return pure7(new Tuple(v.value0, new Tuple(v.value1, v.value2)));
+        }
+        ;
+        return typeError("Function expected, got " + ppr2(x));
+      });
+    };
+  };
+  var checkType = function(ctx) {
+    return function(x) {
+      return function(ty) {
+        return bind7(inferType(ctx)(x))(function(xTy) {
+          return requireSameType(ty)(xTy);
+        });
+      };
+    };
+  };
+  var checkBinOp = function(ctx) {
+    return function(x) {
+      return function(y) {
+        return function(xTy) {
+          return function(yTy) {
+            return discard2(checkType(ctx)(x)(xTy))(function() {
+              return checkType(ctx)(y)(yTy);
+            });
+          };
+        };
+      };
+    };
+  };
 
   // output/Web.DOM.NonElementParentNode/foreign.js
   function _getElementById(id) {
@@ -27128,11 +28286,10 @@
   var fromEvent = /* @__PURE__ */ unsafeReadProtoTagged("MouseEvent");
 
   // output/Main/index.js
-  var pure7 = /* @__PURE__ */ pure(applicativeEffect);
+  var pure8 = /* @__PURE__ */ pure(applicativeEffect);
   var applyFirst4 = /* @__PURE__ */ applyFirst(applyParserT);
   var show7 = /* @__PURE__ */ show(showParseError);
-  var show15 = /* @__PURE__ */ show(showString);
-  var ppr2 = /* @__PURE__ */ ppr(/* @__PURE__ */ pprTerm$prime(pprIxName));
+  var ppr3 = /* @__PURE__ */ ppr(/* @__PURE__ */ pprTerm$prime$prime(isNameName)(isNameIxName)(pprName)(pprIxName));
   var map14 = /* @__PURE__ */ map(functorEffect);
   var bindFlipped4 = /* @__PURE__ */ bindFlipped(bindMaybe);
   var onClick = function(inputArea) {
@@ -27140,7 +28297,7 @@
       return function(event) {
         var v = fromEvent(event);
         if (v instanceof Nothing) {
-          return pure7(unit);
+          return pure8(unit);
         }
         ;
         if (v instanceof Just) {
@@ -27152,23 +28309,25 @@
             }
             ;
             if (v1 instanceof Right) {
-              var v2 = nf(fromNamed(v1.value0));
+              var nameless = fromNamed(v1.value0);
+              var parsedNF = nf(nameless);
+              var v2 = inferType(emptyNameEnv)(nameless);
               if (v2 instanceof Left) {
-                return setValue11("Evaluation error: " + show15(v2.value0))(outputArea)();
+                return setValue11("Type error: " + v2.value0)(outputArea)();
               }
               ;
               if (v2 instanceof Right) {
-                return setValue11(ppr2(v2.value0))(outputArea)();
+                return setValue11(ppr3(parsedNF))(outputArea)();
               }
               ;
-              throw new Error("Failed pattern match at Main (line 57, column 11 - line 59, column 67): " + [v2.constructor.name]);
+              throw new Error("Failed pattern match at Main (line 61, column 11 - line 63, column 74): " + [v2.constructor.name]);
             }
             ;
-            throw new Error("Failed pattern match at Main (line 54, column 7 - line 59, column 67): " + [v1.constructor.name]);
+            throw new Error("Failed pattern match at Main (line 55, column 7 - line 63, column 74): " + [v1.constructor.name]);
           };
         }
         ;
-        throw new Error("Failed pattern match at Main (line 50, column 3 - line 59, column 67): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 51, column 3 - line 63, column 74): " + [v.constructor.name]);
       };
     };
   };
@@ -27182,7 +28341,7 @@
         return error2("fromJust: " + v);
       }
       ;
-      throw new Error("Failed pattern match at Main (line 65, column 1 - line 65, column 45): " + [v.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 69, column 1 - line 69, column 45): " + [v.constructor.name, v1.constructor.name]);
     };
   };
   var main = function __do() {
@@ -27193,19 +28352,19 @@
       return bindFlipped4(fromElement)(v);
     })(getElementById("runButton")(rootNode))();
     var inputArea = map14(function() {
-      var $32 = fromJust5("inputArea");
-      return function($33) {
-        return $32(function(v) {
-          return bindFlipped4(fromElement2)(v);
-        }($33));
-      };
-    }())(getElementById("inputArea")(rootNode))();
-    var outputArea = map14(function() {
-      var $34 = fromJust5("outputArea");
+      var $34 = fromJust5("inputArea");
       return function($35) {
         return $34(function(v) {
           return bindFlipped4(fromElement2)(v);
         }($35));
+      };
+    }())(getElementById("inputArea")(rootNode))();
+    var outputArea = map14(function() {
+      var $36 = fromJust5("outputArea");
+      return function($37) {
+        return $36(function(v) {
+          return bindFlipped4(fromElement2)(v);
+        }($37));
       };
     }())(getElementById("outputArea")(rootNode))();
     if (runBtn instanceof Nothing) {
@@ -27217,7 +28376,7 @@
       return addEventListener(click2)(listener)(false)(toEventTarget(runBtn.value0))();
     }
     ;
-    throw new Error("Failed pattern match at Main (line 42, column 3 - line 46, column 71): " + [runBtn.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 43, column 3 - line 47, column 71): " + [runBtn.constructor.name]);
   };
 
   // <stdin>

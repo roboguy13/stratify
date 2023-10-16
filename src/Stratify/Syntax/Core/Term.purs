@@ -15,6 +15,7 @@ import Prelude
 import Prim hiding (Type)
 import Data.Monoid
 import Data.String as String
+import Data.Bifunctor
 
 import Stratify.Syntax.Name
 import Stratify.Pretty.Doc
@@ -29,54 +30,57 @@ import Data.Foldable (fold)
 --   | BoolType
 --   | FnType (Type a) (Type a)
 
-data Op' a
-  = Add (Term' a) (Term' a)
-  | Sub (Term' a) (Term' a)
-  | Mul (Term' a) (Term' a)
-  | Div (Term' a) (Term' a)
-  | Equal (Term' a) (Term' a)
-  | Lt (Term' a) (Term' a)
-  | And (Term' a) (Term' a)
-  | Or (Term' a) (Term' a)
+data Op'' a b
+  = Add (Term'' a b) (Term'' a b)
+  | Sub (Term'' a b) (Term'' a b)
+  | Mul (Term'' a b) (Term'' a b)
+  | Div (Term'' a b) (Term'' a b)
+  | Equal (Term'' a b) (Term'' a b)
+  | Lt (Term'' a b) (Term'' a b)
+  | And (Term'' a b) (Term'' a b)
+  | Or (Term'' a b) (Term'' a b)
 
 -- TODO: Make the Boolean type just be a sum type (after I add sum types)
-data Term' a
+data Term'' b a
   = Var a
   | IntLit Int
   | BoolLit Boolean
-  | Op (Op' a)
-  | Not (Term' a)
-  | App (Term' a) (Term' a)
-  | Lam Name (Type' a) (Term' a)
-  | If (Term' a) (Term' a) (Term' a)
+  | Op (Op'' b a)
+  | Not (Term'' b a)
+  | App (Term'' b a) (Term'' b a)
+  | Lam b (Type'' b a) (Term'' b a)
+  | If (Term'' b a) (Term'' b a) (Term'' b a)
 
-  | The (Type' a) (Term' a)
+  | The (Type'' b a) (Term'' b a)
 
-  -- | Ann ((Term' a) a) ((Type' a) a)
+  -- | Ann ((Term'' b a) a) ((Type' a) a)
 
-  -- | Y (Scope String (Term' a) a)
+  -- | Y (Scope String (Term'' b a) a)
 
-  -- | Match ((Term' a) a) (List (MatchBranch a))
+  -- | Match ((Term'' b a) a) (List (MatchBranch a))
 
   -- (Type' a)s --
-  | Forall Name (Type' a) (Term' a)
-  | Exists Name (Type' a) (Term' a)
+  | Forall b (Type'' b a) (Term'' b a)
+  | Exists b (Type'' b a) (Term'' b a)
   | IntType
   | BoolType
   | Universe Int
   -- | Prop -- Impredicative universe of propositions
 
 
+derive instance Generic (Term'' b a) _
+derive instance Generic (Op'' b a) _
 
-derive instance Generic (Term' a) _
-derive instance Generic (Op' a) _
-
-instance showTerm :: Show a => Show (Term' a) where
+instance showTerm :: (Show b, Show a) => Show (Term'' b a) where
   show x = genericShow x
 
-instance showOp :: Show a => Show (Op' a) where
+instance showOp :: (Show b, Show a) => Show (Op'' b a) where
   show x = genericShow x
 
+type Term' a = Term'' Name a
+type Op' = Op'' Name
+
+type Type'' = Term''
 type Type' a = Term' a
 type Type = Term
 type Op = Op' IxName
@@ -99,11 +103,11 @@ instance HasIx IxName where
 instance HasVar IxName where
   isVar (IxName _ i) = Just i
 
-instance MkVar Term' IxName where
+instance MkVar (Term'' b) IxName where
   mkVar = Var
 
-derive instance Eq a => Eq (Term' a)
-derive instance Eq a => Eq (Op' a)
+derive instance (Eq b, Eq a) => Eq (Term'' b a)
+derive instance (Eq b, Eq a) => Eq (Op'' b a)
 
 derive instance Generic IxName _
 instance Show IxName where show = genericShow
@@ -116,18 +120,28 @@ shiftIxName (IxName x i) =
   -- }
 
 type Term = Term' IxName
-type SurfaceTerm = Term' Name
+type SurfaceTerm = Term'' String String
+type SurfaceOp = Op'' String String
+type SurfaceType = Type'' String String
 
-derive instance Functor Term'
-derive instance Functor Op'
+instance IsName IxName where
+  mkWildcardName = IxName "" ixHere
+  isWildcardName (IxName "" _) = true -- TODO: Is this right?
+  isWildcardName _ = false
 
-instance Apply Term' where
+derive instance Functor (Term'' b)
+derive instance Functor (Op'' b)
+
+derive instance Bifunctor Term''
+derive instance Bifunctor Op''
+
+instance Apply (Term'' b) where
   apply = ap
 
-instance Applicative Term' where
+instance Applicative (Term'' b) where
   pure = Var
 
-instance Bind Term' where
+instance Bind (Term'' b) where
   bind (Var x) f = f x
   bind (IntLit i) _ = IntLit i
   bind (BoolLit b) _ = BoolLit b
@@ -150,13 +164,13 @@ instance Bind Term' where
   bind (Op (And x y)) f = Op (And (x >>= f) (y >>= f))
   bind (Op (Or x y)) f = Op (Or (x >>= f) (y >>= f))
 
-instance Monad Term'
+instance Monad (Term'' b)
 
 -- termPlate :: forall f a b. Applicative f =>
 --   (Term' a -> f (Term' b)) -> Term' a -> f (Term' b)
 -- termPlate f x (Var x) = ?a
 
-overOp :: forall a b. (Term' a -> Term' b) -> Op' a -> Op' b
+overOp :: forall x y a b. (Term'' x a -> Term'' y b) -> Op'' x a -> Op'' y b
 overOp f (Add x y) = Add (f x) (f y)
 overOp f (Sub x y) = Sub (f x) (f y)
 overOp f (Mul x y) = Mul (f x) (f y)
@@ -170,7 +184,7 @@ fromNamed :: SurfaceTerm -> Term
 fromNamed = go emptyNamingCtx
   where
     go :: NamingCtx -> SurfaceTerm -> Term
-    go nCtx (Var x) = Var (IxName x (nameToIx nCtx x))
+    go nCtx (Var x) = Var (IxName x (nameToIx nCtx (Name x)))
     go nCtx (IntLit i) = IntLit i
     go nCtx (BoolLit b) = BoolLit b
     go nCtx (Op x) = Op $ goOp nCtx x
@@ -192,19 +206,23 @@ fromNamed = go emptyNamingCtx
 
     goOp nCtx = overOp (go nCtx)
 
+    goAbstraction ::
+      NamingCtx ->
+      (Name -> Type -> Term -> Term) ->
+      String -> SurfaceTerm -> SurfaceTerm -> Term
     goAbstraction nCtx f x ty body =
-      let nCtx' = liftNamingCtx x nCtx
+      let nCtx' = liftNamingCtx (Name x) nCtx
       in
-      f x (go nCtx' ty) (go nCtx' body)
+      f (Name x) (go nCtx' ty) (go nCtx' body)
 
 toNamed :: Term -> SurfaceTerm
-toNamed = map go
+toNamed = bimap unName go
   where
-    go :: IxName -> Name
+    go :: IxName -> String
     go (IxName n _) = n
 
 -- Basic pretty-printer. Other pretty-printers should be used for particular language levels
-instance Ppr a => Ppr (Term' a) where
+instance (IsName b, IsName a, Ppr b, Ppr a) => Ppr (Term'' b a) where
   pprDoc (Var v) = pprDoc v
   pprDoc (IntLit i) = text $ show i
   pprDoc (BoolLit b) = text $ show b
@@ -215,7 +233,7 @@ instance Ppr a => Ppr (Term' a) where
   pprDoc (If x y z) = text "if" <+> pprDoc x <+> text "then" <+> pprDoc y <+> text "else" <+> pprDoc y
   pprDoc (The ty x) = text "the" <+> pprNested ty <+> pprNested x
   pprDoc (Forall x ty body) =
-    if String.null x
+    if isWildcardName x
     then pprDoc ty <+> text "->" <+> pprDoc body
     else text "forall" <+> parens (pprDoc x <+> text ":" <+> pprDoc ty) <> text "." <+> pprDoc body
   pprDoc (Exists x ty body) = text "exists" <+> parens (pprDoc x <+> text ":" <+> pprDoc ty) <> text "." <+> pprDoc body
@@ -224,7 +242,7 @@ instance Ppr a => Ppr (Term' a) where
   pprDoc (Universe 0) = text "Type"
   pprDoc (Universe k) = text "Type" <+> text (show k)
 
-instance Ppr a => Nested (Term' a) where
+instance (IsName b, IsName a, Ppr b, Ppr a) => Nested (Term'' b a) where
   isNested (Var _) = false
   isNested (IntLit _) = false
   isNested (BoolLit _) = false
@@ -240,7 +258,7 @@ instance Ppr a => Nested (Term' a) where
   isNested IntType = false
   isNested BoolType = false
 
-instance Ppr a => Ppr (Op' a) where
+instance (IsName a, IsName b, Ppr b, Ppr a) => Ppr (Op'' b a) where
   pprDoc e = case e of
       Add x y -> pprBin "+" x y
       Sub x y -> pprBin "-" x y
@@ -253,8 +271,8 @@ instance Ppr a => Ppr (Op' a) where
     where
       pprBin op x y = pprDoc x <+> text op <+> pprDoc y
 
-fnType :: forall a. Type' a -> Type' a -> Type' a
-fnType = Forall mempty
+fnType :: forall b a. IsName b => Type'' b a -> Type'' b a -> Type'' b a
+fnType = Forall mkWildcardName
 
 -- lam :: String -> Type -> Term -> Term
 -- lam = Lam

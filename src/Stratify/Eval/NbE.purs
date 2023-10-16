@@ -118,7 +118,7 @@ quote depth (VUniverse k) = pure $ Universe k
 quote depth (VNeutral n) = quoteNeutral depth n
 
 quoteNeutral :: Level -> Neutral -> Eval Term
-quoteNeutral depth (NVar x lvl) = pure $ Var (IxName x (levelIx depth lvl)) -- TODO: Does this work?
+quoteNeutral depth (NVar (Name x) lvl) = pure $ Var (IxName x (levelIx depth lvl)) -- TODO: Does this work?
 quoteNeutral depth (NAdd x y) = Op <$> (Add <$> quoteNeutral depth x <*> quote depth y)
 quoteNeutral depth (NSub x y) = Op <$> (Sub <$> quoteNeutral depth x <*> quote depth y)
 quoteNeutral depth (NMul x y) = Op <$> (Mul <$> quoteNeutral depth x <*> quote depth y)
@@ -183,7 +183,7 @@ evalApp :: Value -> Value -> Eval Value
 evalApp (VNeutral nX) y = do
   pure $ VNeutral $ NApp nX y
 evalApp (VLam ty c) y = evalClosure c y
-evalApp _ _ = error "evalApp"
+evalApp x y = error $ "evalApp: " <> show (Tuple x y)
 
 evalIf ::
   Env ->

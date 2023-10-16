@@ -24,6 +24,7 @@ import Stratify.Eval.NbE
 import Stratify.Syntax.Name
 import Stratify.Ppr
 import Stratify.Syntax.Parser.Core
+import Stratify.TypeChecker.Core
 
 import Parsing (runParser)
 import Parsing.String (eof)
@@ -54,9 +55,12 @@ onClick inputArea outputArea event =
       case runParser inputVal (parseTerm <* eof) of
         Left e -> TextAreaElement.setValue ("Parse error: " <> show e) outputArea
         Right parsed ->
-          case nf (fromNamed parsed) of
-            Left e -> TextAreaElement.setValue ("Evaluation error: " <> show e) outputArea
-            Right r -> TextAreaElement.setValue (ppr r) outputArea
+          let nameless = fromNamed parsed
+              parsedNF = nf nameless
+          in
+          case inferType emptyNameEnv nameless of
+            Left e -> TextAreaElement.setValue ("Type error: " <> e) outputArea
+            Right _ -> TextAreaElement.setValue (ppr parsedNF) outputArea
       -- TextAreaElement.setValue (ppr' (eval))
       -- case inputVal of
       --   ":quit" -> TextAreaElement.setValue "Goodbye!" outputArea

@@ -2,31 +2,37 @@
 
 module Stratify.Syntax.Name
   ( Ix
-  , Level
-  , Name
+  , Level(..)
+  , Name(..)
   , NameEnv
   , NamingCtx
   , NamingCtx'
-  , class HasIx, getIx
+  , class HasIx
   , class HasVar
+  , class IsName
   , class MkVar
   , emptyNameEnv
   , emptyNamingCtx
   , extend
+  , getIx
   , initialLevel
   , isVar
+  , isWildcardName
+  , mkWildcardName
   , ixHere
   , ixLevel
   , ixLookup
-  , lookup
   , ixToName
   , levelIx
   , liftNamingCtx
+  , lookup
   , mkVar
   , nameToIx
   , nextLevel
   , shiftIx
   , substHere
+  , unName
+  , wildcardName
   )
   where
 
@@ -43,7 +49,33 @@ import Data.Tuple
 import Data.Generic.Rep
 import Data.Show.Generic
 
-type Name = String
+-- Ignored in comparisons
+newtype Name = Name String
+
+unName :: Name -> String
+unName (Name n) = n
+
+derive instance Generic Name _
+instance Show Name where show x = genericShow x
+instance Eq Name where eq _ _ = true
+
+instance Ppr Name where pprDoc (Name s) = pprDoc s
+
+wildcardName :: Name
+wildcardName = Name "" -- TODO: Do this in a better way
+
+class IsName a where
+  mkWildcardName :: a
+  isWildcardName :: a -> Boolean
+
+instance IsName String where
+  mkWildcardName = ""
+  isWildcardName "" = true
+  isWildcardName _ = false
+
+instance IsName Name where
+  mkWildcardName = Name mkWildcardName
+  isWildcardName (Name s) = isWildcardName s
 
 newtype Level = Level Int
 newtype Ix = Ix Int
