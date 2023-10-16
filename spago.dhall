@@ -17,6 +17,7 @@ to generate this file without the comments in this block.
   , "bound"
   , "console"
   , "control"
+  , "debug"
   , "effect"
   , "either"
   , "exceptions"

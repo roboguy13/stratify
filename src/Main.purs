@@ -60,7 +60,7 @@ onClick inputArea outputArea event =
           in
           case inferType emptyNameEnv nameless of
             Left e -> TextAreaElement.setValue ("Type error: " <> e) outputArea
-            Right _ -> TextAreaElement.setValue (ppr parsedNF) outputArea
+            Right ty -> TextAreaElement.setValue (ppr parsedNF <> "\n  : " <> ppr ty) outputArea
       -- TextAreaElement.setValue (ppr' (eval))
       -- case inputVal of
       --   ":quit" -> TextAreaElement.setValue "Goodbye!" outputArea

@@ -28014,7 +28014,7 @@
           return pure7(v2.value0);
         }
         ;
-        throw new Error("Failed pattern match at Stratify.TypeChecker.Core (line 79, column 3 - line 81, column 25): " + [v2.constructor.name]);
+        throw new Error("Failed pattern match at Stratify.TypeChecker.Core (line 47, column 3 - line 49, column 25): " + [v2.constructor.name]);
       }
       ;
       if (v1 instanceof Forall) {
@@ -28037,7 +28037,7 @@
         return bind7(inferForall(v)(v1.value0))(function(v22) {
           return bind7(inferType(v)(v1.value1))(function(yTy) {
             return discard2(requireSameType(v22.value1.value0)(yTy))(function() {
-              return pure7(substHere2(v1.value1)(v22.value1.value1));
+              return pure7(substHere2(nf(v22.value1.value1))(v1.value1));
             });
           });
         });
@@ -28127,7 +28127,7 @@
         return pure7(new Universe(0));
       }
       ;
-      throw new Error("Failed pattern match at Stratify.TypeChecker.Core (line 77, column 1 - line 77, column 47): " + [v.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Stratify.TypeChecker.Core (line 45, column 1 - line 45, column 47): " + [v.constructor.name, v1.constructor.name]);
     };
   };
   var inferForall = function(ctx) {
@@ -28317,17 +28317,17 @@
               }
               ;
               if (v2 instanceof Right) {
-                return setValue11(ppr3(parsedNF))(outputArea)();
+                return setValue11(ppr3(parsedNF) + ("\n  : " + ppr3(v2.value0)))(outputArea)();
               }
               ;
-              throw new Error("Failed pattern match at Main (line 61, column 11 - line 63, column 74): " + [v2.constructor.name]);
+              throw new Error("Failed pattern match at Main (line 61, column 11 - line 63, column 97): " + [v2.constructor.name]);
             }
             ;
-            throw new Error("Failed pattern match at Main (line 55, column 7 - line 63, column 74): " + [v1.constructor.name]);
+            throw new Error("Failed pattern match at Main (line 55, column 7 - line 63, column 97): " + [v1.constructor.name]);
           };
         }
         ;
-        throw new Error("Failed pattern match at Main (line 51, column 3 - line 63, column 74): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 51, column 3 - line 63, column 97): " + [v.constructor.name]);
       };
     };
   };
