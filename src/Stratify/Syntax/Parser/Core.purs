@@ -107,7 +107,9 @@ parseIf = lexeme do
 parseOp :: Parser SurfaceTerm
 parseOp = lexeme $
     buildExprParser
-        [ [ binaryN "==" (theOp Equal)
+        [ [ binaryRight "->" fnType
+          ]
+        , [ binaryN "==" (theOp Equal)
           , binaryN "<" (theOp Lt)
           ]
         , [ binaryLeft "&&" (theOp And)

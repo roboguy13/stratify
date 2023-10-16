@@ -140,6 +140,11 @@
   };
 
   // output/Data.Semigroup/foreign.js
+  var concatString = function(s1) {
+    return function(s2) {
+      return s1 + s2;
+    };
+  };
   var concatArray = function(xs) {
     return function(ys) {
       if (xs.length === 0)
@@ -163,6 +168,9 @@
   };
 
   // output/Data.Semigroup/index.js
+  var semigroupString = {
+    append: concatString
+  };
   var semigroupArray = {
     append: concatArray
   };
@@ -789,6 +797,12 @@
   };
 
   // output/Data.Monoid/index.js
+  var monoidString = {
+    mempty: "",
+    Semigroup0: function() {
+      return semigroupString;
+    }
+  };
   var mempty = function(dict) {
     return dict.mempty;
   };
@@ -1982,6 +1996,16 @@
     };
   };
 
+  // output/Data.String.Common/foreign.js
+  var toLower = function(s) {
+    return s.toLowerCase();
+  };
+
+  // output/Data.String.Common/index.js
+  var $$null = function(s) {
+    return s === "";
+  };
+
   // output/Data.List/index.js
   var map4 = /* @__PURE__ */ map(functorMaybe);
   var bimap2 = /* @__PURE__ */ bimap(bifunctorStep);
@@ -2599,6 +2623,11 @@
         }
         ;
         if (v instanceof Forall) {
+          var $189 = $$null(v.value0);
+          if ($189) {
+            return besideSpace(pprDoc(pprTerm$prime(dictPpr))(v.value1))(besideSpace(text("->"))(pprDoc(pprTerm$prime(dictPpr))(v.value2)));
+          }
+          ;
           return besideSpace(text("forall"))(append3(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime(dictPpr))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime(dictPpr))(v.value2))));
         }
         ;
@@ -2622,7 +2651,7 @@
           return besideSpace(text("Type"))(text(show4(v.value0)));
         }
         ;
-        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 156, column 1 - line 171, column 54): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 157, column 1 - line 175, column 54): " + [v.constructor.name]);
       }
     };
   };
@@ -2668,7 +2697,7 @@
           return pprBin("||")(e.value0)(e.value1);
         }
         ;
-        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 190, column 14 - line 198, column 32): " + [e.constructor.name]);
+        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 194, column 14 - line 202, column 32): " + [e.constructor.name]);
       }
     };
   };
@@ -2731,7 +2760,7 @@
           return false;
         }
         ;
-        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 173, column 1 - line 187, column 28): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 177, column 1 - line 191, column 28): " + [v.constructor.name]);
       },
       Ppr0: function() {
         return pprTerm$prime(dictPpr);
@@ -2772,7 +2801,7 @@
         return new Or(v(v1.value0), v(v1.value1));
       }
       ;
-      throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 108, column 1 - line 108, column 61): " + [v.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 109, column 1 - line 109, column 61): " + [v.constructor.name, v1.constructor.name]);
     };
   };
   var fromNamed = /* @__PURE__ */ function() {
@@ -2849,10 +2878,13 @@
           return new Universe(v1.value0);
         }
         ;
-        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 121, column 5 - line 121, column 43): " + [v.constructor.name, v1.constructor.name]);
+        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 122, column 5 - line 122, column 43): " + [v.constructor.name, v1.constructor.name]);
       };
     };
     return go2(emptyNamingCtx);
+  }();
+  var fnType = /* @__PURE__ */ function() {
+    return Forall.create(mempty(monoidString));
   }();
 
   // output/Stratify.Eval.NbE/index.js
@@ -4334,16 +4366,6 @@
       }
       return fallback;
     };
-  };
-
-  // output/Data.String.Common/foreign.js
-  var toLower = function(s) {
-    return s.toLowerCase();
-  };
-
-  // output/Data.String.Common/index.js
-  var $$null = function(s) {
-    return s === "";
   };
 
   // output/Data.String.CodePoints/index.js
@@ -26884,6 +26906,11 @@
     return tokenParser.identifier;
   }();
   var parseName$prime = /* @__PURE__ */ lexeme(identifier);
+  var binaryRight = function(x) {
+    return function(p) {
+      return new Infix(voidLeft4(reservedOp(x))(p), AssocRight.value);
+    };
+  };
   var binaryN = function(x) {
     return function(p) {
       return new Infix(voidLeft4(reservedOp(x))(p), AssocNone.value);
@@ -26943,7 +26970,7 @@
         }(v($24));
       };
     };
-    return lexeme(buildExprParser([[binaryN("==")(theOp(Equal.create)), binaryN("<")(theOp(Lt.create))], [binaryLeft("&&")(theOp(And.create)), binaryLeft("||")(theOp(Or.create))], [binaryLeft("*")(theOp(Mul.create)), binaryLeft("/")(theOp(Div.create)), binaryLeft("+")(theOp(Add.create)), binaryLeft("-")(theOp(Sub.create))]])($lazy_parseTerm0(122)));
+    return lexeme(buildExprParser([[binaryRight("->")(fnType)], [binaryN("==")(theOp(Equal.create)), binaryN("<")(theOp(Lt.create))], [binaryLeft("&&")(theOp(And.create)), binaryLeft("||")(theOp(Or.create))], [binaryLeft("*")(theOp(Mul.create)), binaryLeft("/")(theOp(Div.create)), binaryLeft("+")(theOp(Add.create)), binaryLeft("-")(theOp(Sub.create))]])($lazy_parseTerm0(124)));
   });
   var $lazy_parseTerm = /* @__PURE__ */ $runtime_lazy5("parseTerm", "Stratify.Syntax.Parser.Core", function() {
     return defer4(function(v) {

@@ -1,4 +1,46 @@
-module Stratify.Syntax.Parser.Lib.Parser where
+module Stratify.Syntax.Parser.Lib.Parser
+  ( Batch
+  , Operator(..)
+  , ParseError
+  , Parser(..)
+  , ParserResult
+  , addPrecLevel
+  , addToBatch
+  , alpha
+  , binaryLeft
+  , binaryN
+  , binaryRight
+  , char
+  , choice
+  , digit
+  , hidden
+  , inParens
+  , initialBatch
+  , keyword
+  , label
+  , lexeme
+  , lexemeMany
+  , lineComment
+  , lineCommentOnly
+  , newline
+  , oneOf
+  , option
+  , pInfixL
+  , pInfixN
+  , pInfixR
+  , pTerm
+  , parseBaseName
+  , parseCharWhen
+  , parseName
+  , precedenceTable
+  , prefix
+  , runParser
+  , space
+  , string
+  , symbol
+  , unParser
+  )
+  where
 
 import Prelude
 

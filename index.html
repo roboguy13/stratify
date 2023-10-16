@@ -1,18 +1,43 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Stratify REPL</title>
+    <title>Minimalist Browser REPL</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      #container {
+        width: 300px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      #inputArea, #outputArea {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      #runButton {
+        display: block;
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+    </style>
   </head>
   <body>
-    <h1>Stratify REPL</h1>
-    <div>
-      <label for="inputArea">Input</label>
-      <textarea id="inputArea" rows="4" cols="50"></textarea>
-    </div>
-    <button id="runButton">Run</button>
-    <div>
-      <label for="outputArea">Output</label>
-      <textarea id="outputArea" rows="4" cols="50" readonly></textarea>
+    <div id="container">
+      <h1>Minimalist Browser REPL</h1>
+      <textarea id="inputArea" rows="4" placeholder="Type your command here..."></textarea>
+      <button id="runButton">Run</button>
+      <textarea id="outputArea" rows="4" readonly placeholder="Output will appear here..."></textarea>
     </div>
     <script src="index.js"></script>
   </body>

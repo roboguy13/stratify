@@ -14,6 +14,7 @@ import Data.Tuple
 import Prelude
 import Prim hiding (Type)
 import Data.Monoid
+import Data.String as String
 
 import Stratify.Syntax.Name
 import Stratify.Pretty.Doc
@@ -163,7 +164,10 @@ instance Ppr a => Ppr (Term' a) where
   pprDoc (Lam x ty body) = text "\\" <> parens (pprDoc x <+> text ":" <+> pprDoc ty) <> text "." <+> pprDoc body
   pprDoc (If x y z) = text "if" <+> pprDoc x <+> text "then" <+> pprDoc y <+> text "else" <+> pprDoc y
   pprDoc (The ty x) = text "the" <+> pprNested ty <+> pprNested x
-  pprDoc (Forall x ty body) = text "forall" <+> parens (pprDoc x <+> text ":" <+> pprDoc ty) <> text "." <+> pprDoc body
+  pprDoc (Forall x ty body) =
+    if String.null x
+    then pprDoc ty <+> text "->" <+> pprDoc body
+    else text "forall" <+> parens (pprDoc x <+> text ":" <+> pprDoc ty) <> text "." <+> pprDoc body
   pprDoc (Exists x ty body) = text "exists" <+> parens (pprDoc x <+> text ":" <+> pprDoc ty) <> text "." <+> pprDoc body
   pprDoc IntType = text "Int"
   pprDoc BoolType = text "Bool"
@@ -175,7 +179,7 @@ instance Ppr a => Nested (Term' a) where
   isNested (IntLit _) = false
   isNested (BoolLit _) = false
   isNested (Op _) = true
-  isNested (App x y) = true
+  isNested (App _ _) = true
   isNested (Lam _ _ _) = true
   isNested (If _ _ _) = true
   isNested (The _ _) = true
