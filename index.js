@@ -220,6 +220,7 @@
       return r1 === r2;
     };
   };
+  var eqBooleanImpl = refEq;
   var eqIntImpl = refEq;
   var eqCharImpl = refEq;
   var eqStringImpl = refEq;
@@ -234,8 +235,20 @@
   var eqChar = {
     eq: eqCharImpl
   };
+  var eqBoolean = {
+    eq: eqBooleanImpl
+  };
   var eq = function(dict) {
     return dict.eq;
+  };
+  var eq2 = /* @__PURE__ */ eq(eqBoolean);
+  var notEq = function(dictEq) {
+    var eq32 = eq(dictEq);
+    return function(x) {
+      return function(y) {
+        return eq2(eq32(x)(y))(false);
+      };
+    };
   };
 
   // output/Data.Ordering/index.js
@@ -2096,10 +2109,10 @@
     return runFn4(findIndexImpl)(Just.create)(Nothing.value);
   }();
   var elemIndex = function(dictEq) {
-    var eq22 = eq(dictEq);
+    var eq23 = eq(dictEq);
     return function(x) {
       return findIndex(function(v) {
-        return eq22(v)(x);
+        return eq23(v)(x);
       });
     };
   };
@@ -3626,9 +3639,10 @@
   };
   var append4 = /* @__PURE__ */ append(semigroupDoc);
   var pprDoc3 = /* @__PURE__ */ pprDoc(pprIx);
+  var eq22 = /* @__PURE__ */ eq(eqIx);
+  var notEq2 = /* @__PURE__ */ notEq(eqIx);
   var show4 = /* @__PURE__ */ show(showInt);
   var show13 = /* @__PURE__ */ show(showBoolean);
-  var eq2 = /* @__PURE__ */ eq(eqIx);
   var Add = /* @__PURE__ */ function() {
     function Add2(value0, value1) {
       this.value0 = value0;
@@ -3915,211 +3929,6 @@
       return append4(text(v.value0))(append4(text("@"))(pprDoc3(v.value1)));
     }
   };
-  var pprTerm$prime$prime = function(dictIsName) {
-    var isWildcardName2 = isWildcardName(dictIsName);
-    return function(dictIsName1) {
-      return function(dictPpr) {
-        var pprDoc1 = pprDoc(dictPpr);
-        return function(dictPpr1) {
-          var pprDoc22 = pprDoc(dictPpr1);
-          return {
-            pprDoc: function(v) {
-              if (v instanceof Var) {
-                return pprDoc22(v.value0);
-              }
-              ;
-              if (v instanceof IntLit) {
-                return text(show4(v.value0));
-              }
-              ;
-              if (v instanceof BoolLit) {
-                return text(show13(v.value0));
-              }
-              ;
-              if (v instanceof Op) {
-                return pprDoc(pprOp$prime$prime(dictIsName1)(dictIsName)(dictPpr)(dictPpr1))(v.value0);
-              }
-              ;
-              if (v instanceof Not) {
-                return pprNested(nestedTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value0);
-              }
-              ;
-              if (v instanceof App2) {
-                return besideSpace(pprNested(nestedTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value0))(pprNested(nestedTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1));
-              }
-              ;
-              if (v instanceof Lam) {
-                return append4(text("\\"))(append4(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))));
-              }
-              ;
-              if (v instanceof If) {
-                return besideSpace(text("if"))(besideSpace(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value0))(besideSpace(text("then"))(besideSpace(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1))(besideSpace(text("else"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1))))));
-              }
-              ;
-              if (v instanceof The) {
-                return besideSpace(text("the"))(besideSpace(pprNested(nestedTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value0))(pprNested(nestedTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)));
-              }
-              ;
-              if (v instanceof Forall) {
-                var $358 = isWildcardName2(v.value0);
-                if ($358) {
-                  return besideSpace(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1))(besideSpace(text("->"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value2)));
-                }
-                ;
-                return besideSpace(text("forall"))(append4(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))));
-              }
-              ;
-              if (v instanceof Exists) {
-                return besideSpace(text("exists"))(append4(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))));
-              }
-              ;
-              if (v instanceof IntType) {
-                return text("Int");
-              }
-              ;
-              if (v instanceof BoolType) {
-                return text("Bool");
-              }
-              ;
-              if (v instanceof Universe && v.value0 === 0) {
-                return text("Type");
-              }
-              ;
-              if (v instanceof Universe) {
-                return besideSpace(text("Type"))(text(show4(v.value0)));
-              }
-              ;
-              throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 225, column 1 - line 243, column 54): " + [v.constructor.name]);
-            }
-          };
-        };
-      };
-    };
-  };
-  var pprOp$prime$prime = function(dictIsName) {
-    return function(dictIsName1) {
-      return function(dictPpr) {
-        return function(dictPpr1) {
-          return {
-            pprDoc: function(e) {
-              var pprBin = function(op) {
-                return function(x) {
-                  return function(y) {
-                    return besideSpace(pprDoc(pprTerm$prime$prime(dictIsName1)(dictIsName)(dictPpr)(dictPpr1))(x))(besideSpace(text(op))(pprDoc(pprTerm$prime$prime(dictIsName1)(dictIsName)(dictPpr)(dictPpr1))(y)));
-                  };
-                };
-              };
-              if (e instanceof Add) {
-                return pprBin("+")(e.value0)(e.value1);
-              }
-              ;
-              if (e instanceof Sub) {
-                return pprBin("-")(e.value0)(e.value1);
-              }
-              ;
-              if (e instanceof Mul) {
-                return pprBin("*")(e.value0)(e.value1);
-              }
-              ;
-              if (e instanceof Div) {
-                return pprBin("/")(e.value0)(e.value1);
-              }
-              ;
-              if (e instanceof Equal) {
-                return pprBin("==")(e.value0)(e.value1);
-              }
-              ;
-              if (e instanceof Lt) {
-                return pprBin("<")(e.value0)(e.value1);
-              }
-              ;
-              if (e instanceof And) {
-                return pprBin("&&")(e.value0)(e.value1);
-              }
-              ;
-              if (e instanceof Or) {
-                return pprBin("||")(e.value0)(e.value1);
-              }
-              ;
-              throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 262, column 14 - line 270, column 32): " + [e.constructor.name]);
-            }
-          };
-        };
-      };
-    };
-  };
-  var nestedTerm$prime$prime = function(dictIsName) {
-    return function(dictIsName1) {
-      return function(dictPpr) {
-        return function(dictPpr1) {
-          return {
-            isNested: function(v) {
-              if (v instanceof Var) {
-                return false;
-              }
-              ;
-              if (v instanceof IntLit) {
-                return false;
-              }
-              ;
-              if (v instanceof BoolLit) {
-                return false;
-              }
-              ;
-              if (v instanceof Op) {
-                return true;
-              }
-              ;
-              if (v instanceof App2) {
-                return true;
-              }
-              ;
-              if (v instanceof Lam) {
-                return true;
-              }
-              ;
-              if (v instanceof If) {
-                return true;
-              }
-              ;
-              if (v instanceof The) {
-                return true;
-              }
-              ;
-              if (v instanceof Universe) {
-                return true;
-              }
-              ;
-              if (v instanceof Forall) {
-                return true;
-              }
-              ;
-              if (v instanceof Exists) {
-                return true;
-              }
-              ;
-              if (v instanceof Not) {
-                return true;
-              }
-              ;
-              if (v instanceof IntType) {
-                return false;
-              }
-              ;
-              if (v instanceof BoolType) {
-                return false;
-              }
-              ;
-              throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 245, column 1 - line 259, column 28): " + [v.constructor.name]);
-            },
-            Ppr0: function() {
-              return pprTerm$prime$prime(dictIsName)(dictIsName1)(dictPpr)(dictPpr1);
-            }
-          };
-        };
-      };
-    };
-  };
   var mkVarTerm$prime$primeIxName = /* @__PURE__ */ function() {
     return {
       mkVar: Var.create
@@ -4364,7 +4173,7 @@
   var eqIxName = {
     eq: function(v) {
       return function(v1) {
-        return eq2(v.value1)(v1.value1);
+        return eq22(v.value1)(v1.value1);
       };
     }
   };
@@ -4463,7 +4272,7 @@
           return new Op(new Or(bind(bindTerm$prime$prime)(v.value0.value0)(v1), bind(bindTerm$prime$prime)(v.value0.value1)(v1)));
         }
         ;
-        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 144, column 1 - line 165, column 53): " + [v.constructor.name, v1.constructor.name]);
+        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 170, column 1 - line 191, column 53): " + [v.constructor.name, v1.constructor.name]);
       };
     },
     Apply0: function() {
@@ -4520,7 +4329,311 @@
         return new Or(v(v1.value0), v(v1.value1));
       }
       ;
-      throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 173, column 1 - line 173, column 77): " + [v.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 199, column 1 - line 199, column 77): " + [v.constructor.name, v1.constructor.name]);
+    };
+  };
+  var isBinderHereUnused = function(dictHasIx) {
+    var getIx2 = getIx(dictHasIx);
+    var go2 = function(v) {
+      return function(v1) {
+        if (v1 instanceof Var) {
+          return notEq2(getIx2(v1.value0))(v);
+        }
+        ;
+        if (v1 instanceof IntLit) {
+          return true;
+        }
+        ;
+        if (v1 instanceof BoolLit) {
+          return true;
+        }
+        ;
+        if (v1 instanceof Not) {
+          return go2(v)(v1.value0);
+        }
+        ;
+        if (v1 instanceof App2) {
+          return go2(v)(v1.value0) && go2(v)(v1.value1);
+        }
+        ;
+        if (v1 instanceof If) {
+          return go2(v)(v1.value0) && (go2(v)(v1.value1) && go2(v)(v1.value2));
+        }
+        ;
+        if (v1 instanceof Lam) {
+          return go2(v)(v1.value1) && go2(shiftIx(v))(v1.value2);
+        }
+        ;
+        if (v1 instanceof The) {
+          return go2(v)(v1.value0) && go2(v)(v1.value1);
+        }
+        ;
+        if (v1 instanceof Forall) {
+          return go2(v)(v1.value1) && go2(shiftIx(v))(v1.value2);
+        }
+        ;
+        if (v1 instanceof Exists) {
+          return go2(v)(v1.value1) && go2(shiftIx(v))(v1.value2);
+        }
+        ;
+        if (v1 instanceof IntType) {
+          return true;
+        }
+        ;
+        if (v1 instanceof BoolType) {
+          return true;
+        }
+        ;
+        if (v1 instanceof Universe) {
+          return true;
+        }
+        ;
+        if (v1 instanceof Op && v1.value0 instanceof Add) {
+          return go2(v)(v1.value0.value0) && go2(v)(v1.value0.value1);
+        }
+        ;
+        if (v1 instanceof Op && v1.value0 instanceof Sub) {
+          return go2(v)(v1.value0.value0) && go2(v)(v1.value0.value1);
+        }
+        ;
+        if (v1 instanceof Op && v1.value0 instanceof Mul) {
+          return go2(v)(v1.value0.value0) && go2(v)(v1.value0.value1);
+        }
+        ;
+        if (v1 instanceof Op && v1.value0 instanceof Div) {
+          return go2(v)(v1.value0.value0) && go2(v)(v1.value0.value1);
+        }
+        ;
+        if (v1 instanceof Op && v1.value0 instanceof Equal) {
+          return go2(v)(v1.value0.value0) && go2(v)(v1.value0.value1);
+        }
+        ;
+        if (v1 instanceof Op && v1.value0 instanceof Lt) {
+          return go2(v)(v1.value0.value0) && go2(v)(v1.value0.value1);
+        }
+        ;
+        if (v1 instanceof Op && v1.value0 instanceof And) {
+          return go2(v)(v1.value0.value0) && go2(v)(v1.value0.value1);
+        }
+        ;
+        if (v1 instanceof Op && v1.value0 instanceof Or) {
+          return go2(v)(v1.value0.value0) && go2(v)(v1.value0.value1);
+        }
+        ;
+        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 135, column 5 - line 135, column 38): " + [v.constructor.name, v1.constructor.name]);
+      };
+    };
+    return go2(ixHere);
+  };
+  var pprTerm$prime$prime = function(dictIsName) {
+    return function(dictHasIx) {
+      var isBinderHereUnused1 = isBinderHereUnused(dictHasIx);
+      return function(dictIsName1) {
+        return function(dictPpr) {
+          var pprDoc1 = pprDoc(dictPpr);
+          return function(dictPpr1) {
+            var pprDoc22 = pprDoc(dictPpr1);
+            return {
+              pprDoc: function(v) {
+                if (v instanceof Var) {
+                  return pprDoc22(v.value0);
+                }
+                ;
+                if (v instanceof IntLit) {
+                  return text(show4(v.value0));
+                }
+                ;
+                if (v instanceof BoolLit) {
+                  return text(show13(v.value0));
+                }
+                ;
+                if (v instanceof Op) {
+                  return pprDoc(pprOp$prime$prime(dictIsName1)(dictHasIx)(dictIsName)(dictPpr)(dictPpr1))(v.value0);
+                }
+                ;
+                if (v instanceof Not) {
+                  return pprNested(nestedTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value0);
+                }
+                ;
+                if (v instanceof App2) {
+                  return besideSpace(pprNested(nestedTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value0))(pprNested(nestedTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1));
+                }
+                ;
+                if (v instanceof Lam) {
+                  return append4(text("\\"))(append4(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))));
+                }
+                ;
+                if (v instanceof If) {
+                  return besideSpace(text("if"))(besideSpace(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value0))(besideSpace(text("then"))(besideSpace(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1))(besideSpace(text("else"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1))))));
+                }
+                ;
+                if (v instanceof The) {
+                  return besideSpace(text("the"))(besideSpace(pprNested(nestedTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value0))(pprNested(nestedTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)));
+                }
+                ;
+                if (v instanceof Forall) {
+                  var $882 = isBinderHereUnused1(v.value2);
+                  if ($882) {
+                    return besideSpace(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1))(besideSpace(text("->"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value2)));
+                  }
+                  ;
+                  return besideSpace(text("forall"))(append4(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))));
+                }
+                ;
+                if (v instanceof Exists) {
+                  return besideSpace(text("exists"))(append4(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))));
+                }
+                ;
+                if (v instanceof IntType) {
+                  return text("Int");
+                }
+                ;
+                if (v instanceof BoolType) {
+                  return text("Bool");
+                }
+                ;
+                if (v instanceof Universe && v.value0 === 0) {
+                  return text("Type");
+                }
+                ;
+                if (v instanceof Universe) {
+                  return besideSpace(text("Type"))(text(show4(v.value0)));
+                }
+                ;
+                throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 251, column 1 - line 269, column 54): " + [v.constructor.name]);
+              }
+            };
+          };
+        };
+      };
+    };
+  };
+  var pprOp$prime$prime = function(dictIsName) {
+    return function(dictHasIx) {
+      return function(dictIsName1) {
+        return function(dictPpr) {
+          return function(dictPpr1) {
+            return {
+              pprDoc: function(e) {
+                var pprBin = function(op) {
+                  return function(x) {
+                    return function(y) {
+                      return besideSpace(pprDoc(pprTerm$prime$prime(dictIsName1)(dictHasIx)(dictIsName)(dictPpr)(dictPpr1))(x))(besideSpace(text(op))(pprDoc(pprTerm$prime$prime(dictIsName1)(dictHasIx)(dictIsName)(dictPpr)(dictPpr1))(y)));
+                    };
+                  };
+                };
+                if (e instanceof Add) {
+                  return pprBin("+")(e.value0)(e.value1);
+                }
+                ;
+                if (e instanceof Sub) {
+                  return pprBin("-")(e.value0)(e.value1);
+                }
+                ;
+                if (e instanceof Mul) {
+                  return pprBin("*")(e.value0)(e.value1);
+                }
+                ;
+                if (e instanceof Div) {
+                  return pprBin("/")(e.value0)(e.value1);
+                }
+                ;
+                if (e instanceof Equal) {
+                  return pprBin("==")(e.value0)(e.value1);
+                }
+                ;
+                if (e instanceof Lt) {
+                  return pprBin("<")(e.value0)(e.value1);
+                }
+                ;
+                if (e instanceof And) {
+                  return pprBin("&&")(e.value0)(e.value1);
+                }
+                ;
+                if (e instanceof Or) {
+                  return pprBin("||")(e.value0)(e.value1);
+                }
+                ;
+                throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 288, column 14 - line 296, column 32): " + [e.constructor.name]);
+              }
+            };
+          };
+        };
+      };
+    };
+  };
+  var nestedTerm$prime$prime = function(dictIsName) {
+    return function(dictHasIx) {
+      return function(dictIsName1) {
+        return function(dictPpr) {
+          return function(dictPpr1) {
+            return {
+              isNested: function(v) {
+                if (v instanceof Var) {
+                  return false;
+                }
+                ;
+                if (v instanceof IntLit) {
+                  return false;
+                }
+                ;
+                if (v instanceof BoolLit) {
+                  return false;
+                }
+                ;
+                if (v instanceof Op) {
+                  return true;
+                }
+                ;
+                if (v instanceof App2) {
+                  return true;
+                }
+                ;
+                if (v instanceof Lam) {
+                  return true;
+                }
+                ;
+                if (v instanceof If) {
+                  return true;
+                }
+                ;
+                if (v instanceof The) {
+                  return true;
+                }
+                ;
+                if (v instanceof Universe) {
+                  return true;
+                }
+                ;
+                if (v instanceof Forall) {
+                  return true;
+                }
+                ;
+                if (v instanceof Exists) {
+                  return true;
+                }
+                ;
+                if (v instanceof Not) {
+                  return true;
+                }
+                ;
+                if (v instanceof IntType) {
+                  return false;
+                }
+                ;
+                if (v instanceof BoolType) {
+                  return false;
+                }
+                ;
+                throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 271, column 1 - line 285, column 28): " + [v.constructor.name]);
+              },
+              Ppr0: function() {
+                return pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1);
+              }
+            };
+          };
+        };
+      };
     };
   };
   var fromNamed = /* @__PURE__ */ function() {
@@ -4597,7 +4710,7 @@
           return new Universe(v1.value0);
         }
         ;
-        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 186, column 5 - line 186, column 43): " + [v.constructor.name, v1.constructor.name]);
+        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 212, column 5 - line 212, column 43): " + [v.constructor.name, v1.constructor.name]);
       };
     };
     return go2(emptyNamingCtx);
@@ -27969,7 +28082,7 @@
 
   // output/Stratify.TypeChecker.Core/index.js
   var pure7 = /* @__PURE__ */ pure(applicativeEither);
-  var ppr2 = /* @__PURE__ */ ppr(/* @__PURE__ */ pprTerm$prime$prime(isNameName)(isNameIxName)(pprName)(pprIxName));
+  var ppr2 = /* @__PURE__ */ ppr(/* @__PURE__ */ pprTerm$prime$prime(isNameName)(hasIxIxName)(isNameIxName)(pprName)(pprIxName));
   var bind7 = /* @__PURE__ */ bind(bindEither);
   var lookup2 = /* @__PURE__ */ lookup(hasIxIxName);
   var ppr1 = /* @__PURE__ */ ppr(pprIxName);
@@ -27982,8 +28095,8 @@
   }();
   var requireSameType = function(ty) {
     return function(ty$prime) {
-      var $25 = alphaEquiv(ty)(ty$prime);
-      if ($25) {
+      var $26 = alphaEquiv(ty)(ty$prime);
+      if ($26) {
         return pure7(unit);
       }
       ;
@@ -28289,7 +28402,7 @@
   var pure8 = /* @__PURE__ */ pure(applicativeEffect);
   var applyFirst4 = /* @__PURE__ */ applyFirst(applyParserT);
   var show7 = /* @__PURE__ */ show(showParseError);
-  var ppr3 = /* @__PURE__ */ ppr(/* @__PURE__ */ pprTerm$prime$prime(isNameName)(isNameIxName)(pprName)(pprIxName));
+  var ppr3 = /* @__PURE__ */ ppr(/* @__PURE__ */ pprTerm$prime$prime(isNameName)(hasIxIxName)(isNameIxName)(pprName)(pprIxName));
   var map14 = /* @__PURE__ */ map(functorEffect);
   var bindFlipped4 = /* @__PURE__ */ bindFlipped(bindMaybe);
   var onClick = function(inputArea) {
@@ -28352,19 +28465,19 @@
       return bindFlipped4(fromElement)(v);
     })(getElementById("runButton")(rootNode))();
     var inputArea = map14(function() {
-      var $34 = fromJust5("inputArea");
-      return function($35) {
-        return $34(function(v) {
+      var $35 = fromJust5("inputArea");
+      return function($36) {
+        return $35(function(v) {
           return bindFlipped4(fromElement2)(v);
-        }($35));
+        }($36));
       };
     }())(getElementById("inputArea")(rootNode))();
     var outputArea = map14(function() {
-      var $36 = fromJust5("outputArea");
-      return function($37) {
-        return $36(function(v) {
+      var $37 = fromJust5("outputArea");
+      return function($38) {
+        return $37(function(v) {
           return bindFlipped4(fromElement2)(v);
-        }($37));
+        }($38));
       };
     }())(getElementById("outputArea")(rootNode))();
     if (runBtn instanceof Nothing) {

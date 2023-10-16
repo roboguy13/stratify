@@ -129,6 +129,32 @@ instance IsName IxName where
   isWildcardName (IxName "" _) = true -- TODO: Is this right?
   isWildcardName _ = false
 
+isBinderHereUnused :: forall b a. HasIx a => Term'' b a -> Boolean
+isBinderHereUnused = go ixHere
+  where
+    go :: Ix -> Term'' b a -> Boolean
+    go i (Var x) = getIx x /= i
+    go i (IntLit _) = true
+    go i (BoolLit _) = true
+    go i (Not x) = go i x
+    go i (App x y) = go i x && go i y
+    go i (If x y z) = go i x && go i y && go i z
+    go i (Lam x ty body) = go i ty && go (shiftIx i) body
+    go i (The ty x) = go i ty && go i x
+    go i (Forall x ty body) = go i ty && go (shiftIx i) body
+    go i (Exists x ty body) = go i ty && go (shiftIx i) body
+    go i IntType = true
+    go i BoolType = true
+    go i (Universe k) = true
+    go i (Op (Add x y)) = go i x && go i y
+    go i (Op (Sub x y)) = go i x && go i y
+    go i (Op (Mul x y)) = go i x && go i y
+    go i (Op (Div x y)) = go i x && go i y
+    go i (Op (Equal x y)) = go i x && go i y
+    go i (Op (Lt x y)) = go i x && go i y
+    go i (Op (And x y)) = go i x && go i y
+    go i (Op (Or x y)) = go i x && go i y
+
 derive instance Functor (Term'' b)
 derive instance Functor (Op'' b)
 
@@ -222,7 +248,7 @@ toNamed = bimap unName go
     go (IxName n _) = n
 
 -- Basic pretty-printer. Other pretty-printers should be used for particular language levels
-instance (IsName b, IsName a, Ppr b, Ppr a) => Ppr (Term'' b a) where
+instance (IsName b, HasIx a, IsName a, Ppr b, Ppr a) => Ppr (Term'' b a) where
   pprDoc (Var v) = pprDoc v
   pprDoc (IntLit i) = text $ show i
   pprDoc (BoolLit b) = text $ show b
@@ -233,7 +259,7 @@ instance (IsName b, IsName a, Ppr b, Ppr a) => Ppr (Term'' b a) where
   pprDoc (If x y z) = text "if" <+> pprDoc x <+> text "then" <+> pprDoc y <+> text "else" <+> pprDoc y
   pprDoc (The ty x) = text "the" <+> pprNested ty <+> pprNested x
   pprDoc (Forall x ty body) =
-    if isWildcardName x
+    if isBinderHereUnused body
     then pprDoc ty <+> text "->" <+> pprDoc body
     else text "forall" <+> parens (pprDoc x <+> text ":" <+> pprDoc ty) <> text "." <+> pprDoc body
   pprDoc (Exists x ty body) = text "exists" <+> parens (pprDoc x <+> text ":" <+> pprDoc ty) <> text "." <+> pprDoc body
@@ -242,7 +268,7 @@ instance (IsName b, IsName a, Ppr b, Ppr a) => Ppr (Term'' b a) where
   pprDoc (Universe 0) = text "Type"
   pprDoc (Universe k) = text "Type" <+> text (show k)
 
-instance (IsName b, IsName a, Ppr b, Ppr a) => Nested (Term'' b a) where
+instance (IsName b, HasIx a, IsName a, Ppr b, Ppr a) => Nested (Term'' b a) where
   isNested (Var _) = false
   isNested (IntLit _) = false
   isNested (BoolLit _) = false
@@ -258,7 +284,7 @@ instance (IsName b, IsName a, Ppr b, Ppr a) => Nested (Term'' b a) where
   isNested IntType = false
   isNested BoolType = false
 
-instance (IsName a, IsName b, Ppr b, Ppr a) => Ppr (Op'' b a) where
+instance (IsName a, HasIx a, IsName b, Ppr b, Ppr a) => Ppr (Op'' b a) where
   pprDoc e = case e of
       Add x y -> pprBin "+" x y
       Sub x y -> pprBin "-" x y
