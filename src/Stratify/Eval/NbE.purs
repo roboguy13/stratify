@@ -101,15 +101,15 @@ quote :: Level -> Value -> Eval Term
 quote depth (VIntLit i) = pure $ IntLit i
 quote depth (VBoolLit b) = pure $ BoolLit b
 quote depth (VLam ty c0@(Closure c)) =
-  Lam c.argName
+  Lam (toIgnoredName c.argName)
     <$> quote (nextLevel depth) ty
     <*> quoteAbs (nextLevel depth) c0
 quote depth (VForall ty c0@(Closure c)) =
-  Forall c.argName
+  Forall (toIgnoredName c.argName)
     <$> quote (nextLevel depth) ty
     <*> quoteAbs (nextLevel depth) c0
 quote depth (VExists ty c0@(Closure c)) =
-  Exists c.argName
+  Exists (toIgnoredName c.argName)
     <$> quote (nextLevel depth) ty
     <*> quoteAbs (nextLevel depth) c0
 quote depth VIntType = pure IntType
@@ -148,13 +148,13 @@ eval env (App x y) = do
   xVal <- eval env x
   yVal <- eval env y
   evalApp xVal yVal
-eval env (Lam v ty body) = VLam <$> eval env ty <*> pure (mkClosure env v body)
+eval env (Lam v ty body) = VLam <$> eval env ty <*> pure (mkClosure env (fromIgnoredName v) body)
 eval env (If x y z) = do
   xVal <- eval env x
   evalIf env xVal y z
 eval env (The _ty x) = eval env x
-eval env (Forall v ty body) = VForall <$> eval env ty <*> pure (mkClosure env v body)
-eval env (Exists v ty body) = VExists <$> eval env ty <*> pure (mkClosure env v body)
+eval env (Forall v ty body) = VForall <$> eval env ty <*> pure (mkClosure env (fromIgnoredName v) body)
+eval env (Exists v ty body) = VExists <$> eval env ty <*> pure (mkClosure env (fromIgnoredName v) body)
 eval env IntType = pure VIntType
 eval env BoolType = pure VBoolType
 eval env (Universe k) = pure (VUniverse k)
@@ -192,12 +192,12 @@ evalIf env (VBoolLit true) y _ = eval env y
 evalIf env (VBoolLit false) _ z = eval env z
 evalIf env (VNeutral n) y z =
   VNeutral <$> (NIf n <$> eval env y <*> eval env z) -- TODO: Is this right in terms of evaluation order?
-evalIf _ _ _ _ = error "evalIf"
+evalIf _ x y z = error $ "evalIf: " <> show (Tuple x (Tuple y z))
 
 liftIntOp2 :: forall r. (Int -> Int -> r) -> (r -> Value) -> (Neutral -> Value -> Neutral) -> Value -> Value -> Value
 liftIntOp2 f g h (VIntLit i) (VIntLit j) = g $ f i j
 liftIntOp2 f g h (VNeutral x) y = VNeutral $ h x y
-liftIntOp2 _ _ _ _ _ = error "liftIntOp2"
+liftIntOp2 _ _ _ x y = error $ "liftIntOp2: " <> show (Tuple x y)
 
 liftBoolOp :: forall r. (Boolean -> r) -> (r -> Value) -> (Neutral -> Neutral) -> Value -> Value
 liftBoolOp f g _ (VBoolLit x) = g $ f x

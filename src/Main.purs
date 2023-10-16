@@ -52,12 +52,13 @@ onClick inputArea outputArea event =
     Nothing -> pure unit
     Just _ -> do
       inputVal <- TextAreaElement.value inputArea
+      TextAreaElement.setValue "" outputArea
       case runParser inputVal (parseTerm <* eof) of
         Left e -> TextAreaElement.setValue ("Parse error: " <> show e) outputArea
-        Right parsed ->
+        Right parsed -> do
           let nameless = fromNamed parsed
-              parsedNF = nf nameless
-          in
+          TextAreaElement.setValue ("... Nameless representation: " <> ppr nameless) outputArea
+          let parsedNF = nf nameless
           case inferType emptyNameEnv nameless of
             Left e -> TextAreaElement.setValue ("Type error: " <> e) outputArea
             Right ty -> TextAreaElement.setValue (ppr parsedNF <> "\n  : " <> ppr ty) outputArea

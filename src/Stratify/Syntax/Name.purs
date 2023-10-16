@@ -49,15 +49,14 @@ import Data.Tuple
 import Data.Generic.Rep
 import Data.Show.Generic
 
--- Ignored in comparisons
 newtype Name = Name String
 
 unName :: Name -> String
 unName (Name n) = n
 
 derive instance Generic Name _
+derive instance Eq Name
 instance Show Name where show x = genericShow x
-instance Eq Name where eq _ _ = true
 
 instance Ppr Name where pprDoc (Name s) = pprDoc s
 

@@ -77,8 +77,8 @@ instance showTerm :: (Show b, Show a) => Show (Term'' b a) where
 instance showOp :: (Show b, Show a) => Show (Op'' b a) where
   show x = genericShow x
 
-type Term' a = Term'' Name a
-type Op' = Op'' Name
+type Term' a = Term'' IgnoredName a
+type Op' = Op'' IgnoredName
 
 type Type'' = Term''
 type Type' a = Term' a
@@ -90,6 +90,31 @@ data IxName =
   -- { name :: String
   -- , ix :: Ix
   -- }
+
+-- Ignored in comparisons
+newtype IgnoredName = IgnoredName String
+
+derive instance Generic IgnoredName _
+instance Show IgnoredName where show x = genericShow x
+
+unIgnoredName :: IgnoredName -> String
+unIgnoredName (IgnoredName n) = n
+
+toIgnoredName :: Name -> IgnoredName
+toIgnoredName = IgnoredName <<< unName
+
+fromIgnoredName :: IgnoredName -> Name
+fromIgnoredName = Name <<< unIgnoredName
+
+instance IsName IgnoredName where
+  mkWildcardName = IgnoredName ""
+  isWildcardName _ = false
+
+instance Ppr IgnoredName where
+  pprDoc (IgnoredName n) = pprDoc n
+
+instance Eq IgnoredName where
+  eq _ _ = true
 
 instance Ppr IxName where
   pprDoc (IxName x i) = text x <> text "@" <> pprDoc i
@@ -217,15 +242,15 @@ fromNamed = go emptyNamingCtx
     go nCtx (Not x) = Not $ go nCtx x
     go nCtx (App x y) = App (go nCtx x) (go nCtx y)
     go nCtx (Lam x ty body) =
-      goAbstraction nCtx Lam x ty body
+      goAbstraction nCtx (Lam <<< toIgnoredName) x ty body
     go nCtx (If x y z) =
       If (go nCtx x) (go nCtx y) (go nCtx z)
     go nCtx (The ty x) =
       The (go nCtx ty) (go nCtx x)
     go nCtx (Forall x ty body) =
-      goAbstraction nCtx Forall x ty body
+      goAbstraction nCtx (Forall <<< toIgnoredName) x ty body
     go nCtx (Exists x ty body) =
-      goAbstraction nCtx Exists x ty body
+      goAbstraction nCtx (Exists <<< toIgnoredName) x ty body
     go nCtx IntType = IntType
     go nCtx BoolType = BoolType
     go nCtx (Universe k) = Universe k
@@ -242,7 +267,7 @@ fromNamed = go emptyNamingCtx
       f (Name x) (go nCtx' ty) (go nCtx' body)
 
 toNamed :: Term -> SurfaceTerm
-toNamed = bimap unName go
+toNamed = bimap unIgnoredName go
   where
     go :: IxName -> String
     go (IxName n _) = n

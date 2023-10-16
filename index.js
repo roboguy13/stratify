@@ -2109,10 +2109,10 @@
     return runFn4(findIndexImpl)(Just.create)(Nothing.value);
   }();
   var elemIndex = function(dictEq) {
-    var eq23 = eq(dictEq);
+    var eq24 = eq(dictEq);
     return function(x) {
       return findIndex(function(v) {
-        return eq23(v)(x);
+        return eq24(v)(x);
       });
     };
   };
@@ -3404,9 +3404,9 @@
   };
   var pprNested = function(dictNested) {
     var isNested1 = isNested(dictNested);
-    var pprDoc1 = pprDoc(dictNested.Ppr0());
+    var pprDoc12 = pprDoc(dictNested.Ppr0());
     return function(x) {
-      return maybeParens(isNested1(x))(pprDoc1(x));
+      return maybeParens(isNested1(x))(pprDoc12(x));
     };
   };
 
@@ -3427,16 +3427,13 @@
   }();
 
   // output/Stratify.Syntax.Name/index.js
-  var pprDoc2 = /* @__PURE__ */ pprDoc(pprString);
   var show3 = /* @__PURE__ */ show(showInt);
   var genericShowConstructor2 = /* @__PURE__ */ genericShowConstructor(/* @__PURE__ */ genericShowArgsArgument(showInt));
   var map7 = /* @__PURE__ */ map(functorList);
   var map1 = /* @__PURE__ */ map(functorTuple);
   var find3 = /* @__PURE__ */ find(foldableList);
-  var pprName = {
-    pprDoc: function(v) {
-      return pprDoc2(v);
-    }
+  var Name = function(x) {
+    return x;
   };
   var pprIx = {
     pprDoc: function(v) {
@@ -3486,6 +3483,21 @@
       }
     }))
   };
+  var genericIx_ = {
+    to: function(x) {
+      return x;
+    },
+    from: function(x) {
+      return x;
+    }
+  };
+  var showIx = {
+    show: /* @__PURE__ */ genericShow(genericIx_)(/* @__PURE__ */ genericShowConstructor2({
+      reflectSymbol: function() {
+        return "Ix";
+      }
+    }))
+  };
   var functorNamingCtx$prime = {
     map: function(f) {
       return function(m) {
@@ -3495,19 +3507,22 @@
   };
   var map22 = /* @__PURE__ */ map(functorNamingCtx$prime);
   var eqName = {
-    eq: function(v) {
-      return function(v1) {
-        return true;
+    eq: function(x) {
+      return function(y) {
+        return x === y;
       };
     }
   };
-  var eq12 = /* @__PURE__ */ eq(eqName);
+  var eq22 = /* @__PURE__ */ eq(eqName);
   var eqIx = {
     eq: function(x) {
       return function(y) {
         return x === y;
       };
     }
+  };
+  var unName = function(v) {
+    return v;
   };
   var shiftIx = function(v) {
     return v + 1 | 0;
@@ -3517,10 +3532,10 @@
   };
   var nameToIx = function(v) {
     return function(n) {
-      var v1 = find3(function($143) {
+      var v1 = find3(function($148) {
         return function(v2) {
-          return eq12(v2)(n);
-        }(fst($143));
+          return eq22(v2)(n);
+        }(fst($148));
       })(v);
       if (v1 instanceof Just) {
         return v1.value0.value1;
@@ -3530,7 +3545,7 @@
         return error2("nameToIx");
       }
       ;
-      throw new Error("Failed pattern match at Stratify.Syntax.Name (line 142, column 3 - line 144, column 32): " + [v1.constructor.name]);
+      throw new Error("Failed pattern match at Stratify.Syntax.Name (line 141, column 3 - line 143, column 32): " + [v1.constructor.name]);
     };
   };
   var mkWildcardName = function(dict) {
@@ -3555,16 +3570,6 @@
       var v = map22(shiftIx)(nCtx);
       return new Cons(new Tuple(n, ixHere), v);
     };
-  };
-  var isWildcardName = function(dict) {
-    return dict.isWildcardName;
-  };
-  var isWildcardName1 = /* @__PURE__ */ isWildcardName(isNameString);
-  var isNameName = {
-    mkWildcardName: /* @__PURE__ */ mkWildcardName(isNameString),
-    isWildcardName: function(v) {
-      return isWildcardName1(v);
-    }
   };
   var isVar = function(dict) {
     return dict.isVar;
@@ -3592,7 +3597,7 @@
                 return mkVar1(x);
               }
               ;
-              throw new Error("Failed pattern match at Stratify.Syntax.Name (line 168, column 7 - line 171, column 27): " + [v.constructor.name]);
+              throw new Error("Failed pattern match at Stratify.Syntax.Name (line 167, column 7 - line 170, column 27): " + [v.constructor.name]);
             };
             return join2(map32(go2)(e));
           };
@@ -3605,9 +3610,9 @@
     return dict.getIx;
   };
   var lookup = function(dictHasIx) {
-    var $145 = getIx(dictHasIx);
-    return function($146) {
-      return ixLookup($145($146));
+    var $150 = getIx(dictHasIx);
+    return function($151) {
+      return ixLookup($150($151));
     };
   };
   var extend2 = function(x) {
@@ -3638,8 +3643,120 @@
     };
   };
   var append4 = /* @__PURE__ */ append(semigroupDoc);
-  var pprDoc3 = /* @__PURE__ */ pprDoc(pprIx);
-  var eq22 = /* @__PURE__ */ eq(eqIx);
+  var pprDoc2 = /* @__PURE__ */ pprDoc(pprIx);
+  var pprDoc1 = /* @__PURE__ */ pprDoc(pprString);
+  var genericShowArgsArgument2 = /* @__PURE__ */ genericShowArgsArgument(showString);
+  var eq23 = /* @__PURE__ */ eq(eqIx);
+  var VarIsSymbol = {
+    reflectSymbol: function() {
+      return "Var";
+    }
+  };
+  var genericShowConstructor3 = /* @__PURE__ */ genericShowConstructor(/* @__PURE__ */ genericShowArgsArgument(showInt));
+  var genericShowSum2 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor3({
+    reflectSymbol: function() {
+      return "IntLit";
+    }
+  }));
+  var genericShowSum1 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor(/* @__PURE__ */ genericShowArgsArgument(showBoolean))({
+    reflectSymbol: function() {
+      return "BoolLit";
+    }
+  }));
+  var OpIsSymbol = {
+    reflectSymbol: function() {
+      return "Op";
+    }
+  };
+  var NotIsSymbol = {
+    reflectSymbol: function() {
+      return "Not";
+    }
+  };
+  var AppIsSymbol = {
+    reflectSymbol: function() {
+      return "App";
+    }
+  };
+  var LamIsSymbol = {
+    reflectSymbol: function() {
+      return "Lam";
+    }
+  };
+  var IfIsSymbol = {
+    reflectSymbol: function() {
+      return "If";
+    }
+  };
+  var TheIsSymbol = {
+    reflectSymbol: function() {
+      return "The";
+    }
+  };
+  var ForallIsSymbol = {
+    reflectSymbol: function() {
+      return "Forall";
+    }
+  };
+  var ExistsIsSymbol = {
+    reflectSymbol: function() {
+      return "Exists";
+    }
+  };
+  var genericShowConstructor1 = /* @__PURE__ */ genericShowConstructor(genericShowArgsNoArguments);
+  var genericShowSum22 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor1({
+    reflectSymbol: function() {
+      return "IntType";
+    }
+  }))(/* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor1({
+    reflectSymbol: function() {
+      return "BoolType";
+    }
+  }))(/* @__PURE__ */ genericShowConstructor3({
+    reflectSymbol: function() {
+      return "Universe";
+    }
+  })));
+  var AddIsSymbol = {
+    reflectSymbol: function() {
+      return "Add";
+    }
+  };
+  var SubIsSymbol = {
+    reflectSymbol: function() {
+      return "Sub";
+    }
+  };
+  var MulIsSymbol = {
+    reflectSymbol: function() {
+      return "Mul";
+    }
+  };
+  var DivIsSymbol = {
+    reflectSymbol: function() {
+      return "Div";
+    }
+  };
+  var EqualIsSymbol = {
+    reflectSymbol: function() {
+      return "Equal";
+    }
+  };
+  var LtIsSymbol = {
+    reflectSymbol: function() {
+      return "Lt";
+    }
+  };
+  var AndIsSymbol = {
+    reflectSymbol: function() {
+      return "And";
+    }
+  };
+  var OrIsSymbol = {
+    reflectSymbol: function() {
+      return "Or";
+    }
+  };
   var notEq2 = /* @__PURE__ */ notEq(eqIx);
   var show4 = /* @__PURE__ */ show(showInt);
   var show13 = /* @__PURE__ */ show(showBoolean);
@@ -3924,9 +4041,17 @@
     };
     return IxName2;
   }();
+  var IgnoredName = function(x) {
+    return x;
+  };
   var pprIxName = {
     pprDoc: function(v) {
-      return append4(text(v.value0))(append4(text("@"))(pprDoc3(v.value1)));
+      return append4(text(v.value0))(append4(text("@"))(pprDoc2(v.value1)));
+    }
+  };
+  var pprIgnoredName = {
+    pprDoc: function(v) {
+      return pprDoc1(v);
     }
   };
   var mkVarTerm$prime$primeIxName = /* @__PURE__ */ function() {
@@ -3946,6 +4071,12 @@
       }
     };
   }();
+  var isNameIgnoredName = {
+    mkWildcardName: "",
+    isWildcardName: function(v) {
+      return false;
+    }
+  };
   var hasVarIxName = {
     isVar: function(v) {
       return new Just(v.value1);
@@ -3954,6 +4085,233 @@
   var hasIxIxName = {
     getIx: function(v) {
       return v.value1;
+    }
+  };
+  var genericTerm$prime$prime_ = {
+    to: function(x) {
+      if (x instanceof Inl) {
+        return new Var(x.value0);
+      }
+      ;
+      if (x instanceof Inr && x.value0 instanceof Inl) {
+        return new IntLit(x.value0.value0);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && x.value0.value0 instanceof Inl)) {
+        return new BoolLit(x.value0.value0.value0);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && x.value0.value0.value0 instanceof Inl))) {
+        return new Op(x.value0.value0.value0.value0);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0 instanceof Inl)))) {
+        return new Not(x.value0.value0.value0.value0.value0);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0 instanceof Inl))))) {
+        return new App2(x.value0.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0 instanceof Inl)))))) {
+        return new Lam(x.value0.value0.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value0.value0.value1.value0, x.value0.value0.value0.value0.value0.value0.value0.value1.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0 instanceof Inl))))))) {
+        return new If(x.value0.value0.value0.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value0.value0.value0.value1.value0, x.value0.value0.value0.value0.value0.value0.value0.value0.value1.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inl)))))))) {
+        return new The(x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inl))))))))) {
+        return new Forall(x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value1.value0, x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value1.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inl)))))))))) {
+        return new Exists(x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value1.value0, x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value1.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inl))))))))))) {
+        return IntType.value;
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inl)))))))))))) {
+        return BoolType.value;
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr)))))))))))) {
+        return new Universe(x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0);
+      }
+      ;
+      throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 71, column 1 - line 71, column 39): " + [x.constructor.name]);
+    },
+    from: function(x) {
+      if (x instanceof Var) {
+        return new Inl(x.value0);
+      }
+      ;
+      if (x instanceof IntLit) {
+        return new Inr(new Inl(x.value0));
+      }
+      ;
+      if (x instanceof BoolLit) {
+        return new Inr(new Inr(new Inl(x.value0)));
+      }
+      ;
+      if (x instanceof Op) {
+        return new Inr(new Inr(new Inr(new Inl(x.value0))));
+      }
+      ;
+      if (x instanceof Not) {
+        return new Inr(new Inr(new Inr(new Inr(new Inl(x.value0)))));
+      }
+      ;
+      if (x instanceof App2) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, x.value1)))))));
+      }
+      ;
+      if (x instanceof Lam) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, new Product(x.value1, x.value2)))))))));
+      }
+      ;
+      if (x instanceof If) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, new Product(x.value1, x.value2))))))))));
+      }
+      ;
+      if (x instanceof The) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, x.value1))))))))));
+      }
+      ;
+      if (x instanceof Forall) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, new Product(x.value1, x.value2))))))))))));
+      }
+      ;
+      if (x instanceof Exists) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, new Product(x.value1, x.value2)))))))))))));
+      }
+      ;
+      if (x instanceof IntType) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value))))))))))));
+      }
+      ;
+      if (x instanceof BoolType) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value)))))))))))));
+      }
+      ;
+      if (x instanceof Universe) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(x.value0)))))))))))));
+      }
+      ;
+      throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 71, column 1 - line 71, column 39): " + [x.constructor.name]);
+    }
+  };
+  var genericShow4 = /* @__PURE__ */ genericShow(genericTerm$prime$prime_);
+  var genericOp$prime$prime_ = {
+    to: function(x) {
+      if (x instanceof Inl) {
+        return new Add(x.value0.value0, x.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && x.value0 instanceof Inl) {
+        return new Sub(x.value0.value0.value0, x.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && x.value0.value0 instanceof Inl)) {
+        return new Mul(x.value0.value0.value0.value0, x.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && x.value0.value0.value0 instanceof Inl))) {
+        return new Div(x.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0 instanceof Inl)))) {
+        return new Equal(x.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0 instanceof Inl))))) {
+        return new Lt(x.value0.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0 instanceof Inl)))))) {
+        return new And(x.value0.value0.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value0.value0.value1);
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0 instanceof Inr)))))) {
+        return new Or(x.value0.value0.value0.value0.value0.value0.value0.value0, x.value0.value0.value0.value0.value0.value0.value0.value1);
+      }
+      ;
+      throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 72, column 1 - line 72, column 37): " + [x.constructor.name]);
+    },
+    from: function(x) {
+      if (x instanceof Add) {
+        return new Inl(new Product(x.value0, x.value1));
+      }
+      ;
+      if (x instanceof Sub) {
+        return new Inr(new Inl(new Product(x.value0, x.value1)));
+      }
+      ;
+      if (x instanceof Mul) {
+        return new Inr(new Inr(new Inl(new Product(x.value0, x.value1))));
+      }
+      ;
+      if (x instanceof Div) {
+        return new Inr(new Inr(new Inr(new Inl(new Product(x.value0, x.value1)))));
+      }
+      ;
+      if (x instanceof Equal) {
+        return new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, x.value1))))));
+      }
+      ;
+      if (x instanceof Lt) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, x.value1)))))));
+      }
+      ;
+      if (x instanceof And) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(new Product(x.value0, x.value1))))))));
+      }
+      ;
+      if (x instanceof Or) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Product(x.value0, x.value1))))))));
+      }
+      ;
+      throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 72, column 1 - line 72, column 37): " + [x.constructor.name]);
+    }
+  };
+  var genericShow1 = /* @__PURE__ */ genericShow(genericOp$prime$prime_);
+  var genericIxName_ = {
+    to: function(x) {
+      return new IxName(x.value0, x.value1);
+    },
+    from: function(x) {
+      return new Product(x.value0, x.value1);
+    }
+  };
+  var showIxName = {
+    show: /* @__PURE__ */ genericShow(genericIxName_)(/* @__PURE__ */ genericShowConstructor(/* @__PURE__ */ genericShowArgsProduct(genericShowArgsArgument2)(/* @__PURE__ */ genericShowArgsArgument(showIx)))({
+      reflectSymbol: function() {
+        return "IxName";
+      }
+    }))
+  };
+  var genericIgnoredName_ = {
+    to: function(x) {
+      return x;
+    },
+    from: function(x) {
+      return x;
+    }
+  };
+  var genericShow22 = /* @__PURE__ */ genericShow(genericIgnoredName_)(/* @__PURE__ */ genericShowConstructor(genericShowArgsArgument2)({
+    reflectSymbol: function() {
+      return "IgnoredName";
+    }
+  }));
+  var showIgnoredName = {
+    show: function(x) {
+      return genericShow22(x);
     }
   };
   var functorTerm$prime$prime = {
@@ -4173,7 +4531,14 @@
   var eqIxName = {
     eq: function(v) {
       return function(v1) {
-        return eq22(v.value1)(v1.value1);
+        return eq23(v.value1)(v1.value1);
+      };
+    }
+  };
+  var eqIgnoredName = {
+    eq: function(v) {
+      return function(v1) {
+        return true;
       };
     }
   };
@@ -4272,7 +4637,7 @@
           return new Op(new Or(bind(bindTerm$prime$prime)(v.value0.value0)(v1), bind(bindTerm$prime$prime)(v.value0.value1)(v1)));
         }
         ;
-        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 170, column 1 - line 191, column 53): " + [v.constructor.name, v1.constructor.name]);
+        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 195, column 1 - line 216, column 53): " + [v.constructor.name, v1.constructor.name]);
       };
     },
     Apply0: function() {
@@ -4295,6 +4660,32 @@
       }
     };
   });
+  var unIgnoredName = function(v) {
+    return v;
+  };
+  var toIgnoredName = function($978) {
+    return IgnoredName(unName($978));
+  };
+  var showTerm = function(dictShow) {
+    var genericShowArgsProduct2 = genericShowArgsProduct(genericShowArgsArgument(dictShow));
+    return function(dictShow1) {
+      var genericShowSum33 = genericShowSum(genericShowConstructor(genericShowArgsArgument(dictShow1))(VarIsSymbol));
+      return {
+        show: function(x) {
+          return genericShow4(genericShowSum33(genericShowSum2(genericShowSum1(genericShowSum(genericShowConstructor(genericShowArgsArgument(showOp(dictShow)(dictShow1)))(OpIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(NotIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(genericShowArgsArgument(showTerm(dictShow)(dictShow1))))(AppIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct2(genericShowArgsProduct(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))))(LamIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(genericShowArgsProduct(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))))(IfIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(genericShowArgsArgument(showTerm(dictShow)(dictShow1))))(TheIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct2(genericShowArgsProduct(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))))(ForallIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct2(genericShowArgsProduct(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))))(ExistsIsSymbol))(genericShowSum22))))))))))))(x);
+        }
+      };
+    };
+  };
+  var showOp = function(dictShow) {
+    return function(dictShow1) {
+      return {
+        show: function(x) {
+          return genericShow1(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(genericShowArgsArgument(showTerm(dictShow)(dictShow1))))(AddIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(genericShowArgsArgument(showTerm(dictShow)(dictShow1))))(SubIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(genericShowArgsArgument(showTerm(dictShow)(dictShow1))))(MulIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(genericShowArgsArgument(showTerm(dictShow)(dictShow1))))(DivIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(genericShowArgsArgument(showTerm(dictShow)(dictShow1))))(EqualIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(genericShowArgsArgument(showTerm(dictShow)(dictShow1))))(LtIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(genericShowArgsArgument(showTerm(dictShow)(dictShow1))))(AndIsSymbol))(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showTerm(dictShow)(dictShow1)))(genericShowArgsArgument(showTerm(dictShow)(dictShow1))))(OrIsSymbol)))))))))(x);
+        }
+      };
+    };
+  };
   var overOp = function(v) {
     return function(v1) {
       if (v1 instanceof Add) {
@@ -4329,7 +4720,7 @@
         return new Or(v(v1.value0), v(v1.value1));
       }
       ;
-      throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 199, column 1 - line 199, column 77): " + [v.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 224, column 1 - line 224, column 77): " + [v.constructor.name, v1.constructor.name]);
     };
   };
   var isBinderHereUnused = function(dictHasIx) {
@@ -4420,7 +4811,7 @@
           return go2(v)(v1.value0.value0) && go2(v)(v1.value0.value1);
         }
         ;
-        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 135, column 5 - line 135, column 38): " + [v.constructor.name, v1.constructor.name]);
+        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 160, column 5 - line 160, column 38): " + [v.constructor.name, v1.constructor.name]);
       };
     };
     return go2(ixHere);
@@ -4430,13 +4821,13 @@
       var isBinderHereUnused1 = isBinderHereUnused(dictHasIx);
       return function(dictIsName1) {
         return function(dictPpr) {
-          var pprDoc1 = pprDoc(dictPpr);
+          var pprDoc22 = pprDoc(dictPpr);
           return function(dictPpr1) {
-            var pprDoc22 = pprDoc(dictPpr1);
+            var pprDoc3 = pprDoc(dictPpr1);
             return {
               pprDoc: function(v) {
                 if (v instanceof Var) {
-                  return pprDoc22(v.value0);
+                  return pprDoc3(v.value0);
                 }
                 ;
                 if (v instanceof IntLit) {
@@ -4460,11 +4851,11 @@
                 }
                 ;
                 if (v instanceof Lam) {
-                  return append4(text("\\"))(append4(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))));
+                  return append4(text("\\"))(append4(parens(besideSpace(pprDoc22(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))));
                 }
                 ;
                 if (v instanceof If) {
-                  return besideSpace(text("if"))(besideSpace(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value0))(besideSpace(text("then"))(besideSpace(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1))(besideSpace(text("else"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1))))));
+                  return besideSpace(text("if"))(besideSpace(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value0))(besideSpace(text("then"))(besideSpace(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1))(besideSpace(text("else"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))))));
                 }
                 ;
                 if (v instanceof The) {
@@ -4472,16 +4863,16 @@
                 }
                 ;
                 if (v instanceof Forall) {
-                  var $882 = isBinderHereUnused1(v.value2);
-                  if ($882) {
+                  var $905 = isBinderHereUnused1(v.value2);
+                  if ($905) {
                     return besideSpace(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1))(besideSpace(text("->"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value2)));
                   }
                   ;
-                  return besideSpace(text("forall"))(append4(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))));
+                  return besideSpace(text("forall"))(append4(parens(besideSpace(pprDoc22(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))));
                 }
                 ;
                 if (v instanceof Exists) {
-                  return besideSpace(text("exists"))(append4(parens(besideSpace(pprDoc1(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))));
+                  return besideSpace(text("exists"))(append4(parens(besideSpace(pprDoc22(v.value0))(besideSpace(text(":"))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value1)))))(besideSpace(text("."))(pprDoc(pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1))(v.value2))));
                 }
                 ;
                 if (v instanceof IntType) {
@@ -4500,7 +4891,7 @@
                   return besideSpace(text("Type"))(text(show4(v.value0)));
                 }
                 ;
-                throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 251, column 1 - line 269, column 54): " + [v.constructor.name]);
+                throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 276, column 1 - line 294, column 54): " + [v.constructor.name]);
               }
             };
           };
@@ -4554,7 +4945,7 @@
                   return pprBin("||")(e.value0)(e.value1);
                 }
                 ;
-                throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 288, column 14 - line 296, column 32): " + [e.constructor.name]);
+                throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 313, column 14 - line 321, column 32): " + [e.constructor.name]);
               }
             };
           };
@@ -4625,7 +5016,7 @@
                   return false;
                 }
                 ;
-                throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 271, column 1 - line 285, column 28): " + [v.constructor.name]);
+                throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 296, column 1 - line 310, column 28): " + [v.constructor.name]);
               },
               Ppr0: function() {
                 return pprTerm$prime$prime(dictIsName)(dictHasIx)(dictIsName1)(dictPpr)(dictPpr1);
@@ -4679,7 +5070,9 @@
         }
         ;
         if (v1 instanceof Lam) {
-          return goAbstraction(v)(Lam.create)(v1.value0)(v1.value1)(v1.value2);
+          return goAbstraction(v)(function($979) {
+            return Lam.create(toIgnoredName($979));
+          })(v1.value0)(v1.value1)(v1.value2);
         }
         ;
         if (v1 instanceof If) {
@@ -4691,11 +5084,15 @@
         }
         ;
         if (v1 instanceof Forall) {
-          return goAbstraction(v)(Forall.create)(v1.value0)(v1.value1)(v1.value2);
+          return goAbstraction(v)(function($980) {
+            return Forall.create(toIgnoredName($980));
+          })(v1.value0)(v1.value1)(v1.value2);
         }
         ;
         if (v1 instanceof Exists) {
-          return goAbstraction(v)(Exists.create)(v1.value0)(v1.value1)(v1.value2);
+          return goAbstraction(v)(function($981) {
+            return Exists.create(toIgnoredName($981));
+          })(v1.value0)(v1.value1)(v1.value2);
         }
         ;
         if (v1 instanceof IntType) {
@@ -4710,23 +5107,26 @@
           return new Universe(v1.value0);
         }
         ;
-        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 212, column 5 - line 212, column 43): " + [v.constructor.name, v1.constructor.name]);
+        throw new Error("Failed pattern match at Stratify.Syntax.Core.Term (line 237, column 5 - line 237, column 43): " + [v.constructor.name, v1.constructor.name]);
       };
     };
     return go2(emptyNamingCtx);
   }();
+  var fromIgnoredName = function($982) {
+    return Name(unIgnoredName($982));
+  };
   var fnType = function(dictIsName) {
     return Forall.create(mkWildcardName(dictIsName));
   };
 
   // output/Stratify.Eval.NbE/index.js
-  var genericShowConstructor3 = /* @__PURE__ */ genericShowConstructor(/* @__PURE__ */ genericShowArgsArgument(showInt));
-  var genericShowSum2 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor3({
+  var genericShowConstructor4 = /* @__PURE__ */ genericShowConstructor(/* @__PURE__ */ genericShowArgsArgument(showInt));
+  var genericShowSum3 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor4({
     reflectSymbol: function() {
       return "VIntLit";
     }
   }));
-  var genericShowSum1 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor(/* @__PURE__ */ genericShowArgsArgument(showBoolean))({
+  var genericShowSum12 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor(/* @__PURE__ */ genericShowArgsArgument(showBoolean))({
     reflectSymbol: function() {
       return "VBoolLit";
     }
@@ -4746,18 +5146,18 @@
       return "VExists";
     }
   };
-  var genericShowConstructor1 = /* @__PURE__ */ genericShowConstructor(genericShowArgsNoArguments);
-  var genericShowSum22 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor1({
+  var genericShowConstructor12 = /* @__PURE__ */ genericShowConstructor(genericShowArgsNoArguments);
+  var genericShowSum23 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor12({
     reflectSymbol: function() {
       return "VIntType";
     }
   }));
-  var genericShowSum3 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor1({
+  var genericShowSum32 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor12({
     reflectSymbol: function() {
       return "VBoolType";
     }
   }));
-  var genericShowSum4 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor3({
+  var genericShowSum4 = /* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor4({
     reflectSymbol: function() {
       return "VUniverse";
     }
@@ -4839,10 +5239,11 @@
   var lessThan2 = /* @__PURE__ */ lessThan(ordInt);
   var conj2 = /* @__PURE__ */ conj(heytingAlgebraBoolean);
   var disj2 = /* @__PURE__ */ disj(heytingAlgebraBoolean);
+  var showTerm2 = /* @__PURE__ */ showTerm(showIgnoredName)(showIxName);
   var show5 = /* @__PURE__ */ show(showString);
   var not2 = /* @__PURE__ */ not(heytingAlgebraBoolean);
   var bind3 = /* @__PURE__ */ bind(bindEither);
-  var eq13 = /* @__PURE__ */ eq(/* @__PURE__ */ eqTerm$prime$prime(eqName)(eqIxName));
+  var eq12 = /* @__PURE__ */ eq(/* @__PURE__ */ eqTerm$prime$prime(eqIgnoredName)(eqIxName));
   var Closure = /* @__PURE__ */ function() {
     function Closure2(value0) {
       this.value0 = value0;
@@ -5107,7 +5508,7 @@
       return "<closure>";
     }
   };
-  var genericShowArgsArgument2 = /* @__PURE__ */ genericShowArgsArgument(showClosure);
+  var genericShowArgsArgument3 = /* @__PURE__ */ genericShowArgsArgument(showClosure);
   var genericValue_ = {
     to: function(x) {
       if (x instanceof Inl) {
@@ -5188,7 +5589,7 @@
       throw new Error("Failed pattern match at Stratify.Eval.NbE (line 66, column 1 - line 66, column 32): " + [x.constructor.name]);
     }
   };
-  var genericShow4 = /* @__PURE__ */ genericShow(genericValue_);
+  var genericShow5 = /* @__PURE__ */ genericShow(genericValue_);
   var genericNeutral_ = {
     to: function(x) {
       if (x instanceof Inl) {
@@ -5293,18 +5694,20 @@
       throw new Error("Failed pattern match at Stratify.Eval.NbE (line 67, column 1 - line 67, column 34): " + [x.constructor.name]);
     }
   };
-  var genericShow1 = /* @__PURE__ */ genericShow(genericNeutral_);
+  var genericShow12 = /* @__PURE__ */ genericShow(genericNeutral_);
   var showValue = {
     show: function(x) {
-      return genericShow4(genericShowSum2(genericShowSum1(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showValue))(genericShowArgsArgument2))(VLamIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showValue))(genericShowArgsArgument2))(VForallIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showValue))(genericShowArgsArgument2))(VExistsIsSymbol))(genericShowSum22(genericShowSum3(genericShowSum4(genericShowConstructor(genericShowArgsArgument(showNeutral))(VNeutralIsSymbol))))))))))(x);
+      return genericShow5(genericShowSum3(genericShowSum12(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showValue))(genericShowArgsArgument3))(VLamIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showValue))(genericShowArgsArgument3))(VForallIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showValue))(genericShowArgsArgument3))(VExistsIsSymbol))(genericShowSum23(genericShowSum32(genericShowSum4(genericShowConstructor(genericShowArgsArgument(showNeutral))(VNeutralIsSymbol))))))))))(x);
     }
   };
   var showNeutral = {
     show: function(x) {
-      return genericShow1(genericShowSum5(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NAddIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NSubIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NMulIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NDivIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NEqualIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NLtIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NAndIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NOrIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsArgument(showNeutral))(NNotIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NAppIsSymbol))(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsProduct(genericShowArgsArgument(showValue))(genericShowArgsArgument(showValue))))(NIfIsSymbol)))))))))))))(x);
+      return genericShow12(genericShowSum5(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NAddIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NSubIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NMulIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NDivIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NEqualIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NLtIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NAndIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NOrIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsArgument(showNeutral))(NNotIsSymbol))(genericShowSum(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsArgument(showValue)))(NAppIsSymbol))(genericShowConstructor(genericShowArgsProduct(genericShowArgsArgument(showNeutral))(genericShowArgsProduct(genericShowArgsArgument(showValue))(genericShowArgsArgument(showValue))))(NIfIsSymbol)))))))))))))(x);
     }
   };
-  var show14 = /* @__PURE__ */ show(/* @__PURE__ */ showTuple(showValue)(showValue));
+  var showTuple2 = /* @__PURE__ */ showTuple(showValue);
+  var show14 = /* @__PURE__ */ show(/* @__PURE__ */ showTuple2(showValue));
+  var show23 = /* @__PURE__ */ show(/* @__PURE__ */ showTuple2(/* @__PURE__ */ showTuple(showTerm2)(showTerm2)));
   var quoteNeutral = function(v) {
     return function(v1) {
       if (v1 instanceof NVar) {
@@ -5374,15 +5777,15 @@
       }
       ;
       if (v1 instanceof VLam) {
-        return apply2(map8(Lam.create(v1.value1.value0.argName))(quote(nextLevel(v))(v1.value0)))(quoteAbs(nextLevel(v))(v1.value1));
+        return apply2(map8(Lam.create(toIgnoredName(v1.value1.value0.argName)))(quote(nextLevel(v))(v1.value0)))(quoteAbs(nextLevel(v))(v1.value1));
       }
       ;
       if (v1 instanceof VForall) {
-        return apply2(map8(Forall.create(v1.value1.value0.argName))(quote(nextLevel(v))(v1.value0)))(quoteAbs(nextLevel(v))(v1.value1));
+        return apply2(map8(Forall.create(toIgnoredName(v1.value1.value0.argName)))(quote(nextLevel(v))(v1.value0)))(quoteAbs(nextLevel(v))(v1.value1));
       }
       ;
       if (v1 instanceof VExists) {
-        return apply2(map8(Exists.create(v1.value1.value0.argName))(quote(nextLevel(v))(v1.value0)))(quoteAbs(nextLevel(v))(v1.value1));
+        return apply2(map8(Exists.create(toIgnoredName(v1.value1.value0.argName)))(quote(nextLevel(v))(v1.value0)))(quoteAbs(nextLevel(v))(v1.value1));
       }
       ;
       if (v1 instanceof VIntType) {
@@ -5417,7 +5820,7 @@
               return new VNeutral(v2(v3.value0)(v4));
             }
             ;
-            return error2("liftIntOp2");
+            return error2("liftIntOp2: " + show14(new Tuple(v3, v4)));
           };
         };
       };
@@ -5542,7 +5945,7 @@
             return map8(VNeutral.create)(apply2(map8(NIf.create(v1.value0))($$eval(v)(v2)))($$eval(v)(v3)));
           }
           ;
-          return error2("evalIf");
+          return error2("evalIf: " + show23(new Tuple(v1, new Tuple(v2, v3))));
         };
       };
     };
@@ -5587,7 +5990,7 @@
       }
       ;
       if (v1 instanceof Lam) {
-        return apply2(map8(VLam.create)($$eval(v)(v1.value1)))(pure3(mkClosure(v)(v1.value0)(v1.value2)));
+        return apply2(map8(VLam.create)($$eval(v)(v1.value1)))(pure3(mkClosure(v)(fromIgnoredName(v1.value0))(v1.value2)));
       }
       ;
       if (v1 instanceof If) {
@@ -5601,11 +6004,11 @@
       }
       ;
       if (v1 instanceof Forall) {
-        return apply2(map8(VForall.create)($$eval(v)(v1.value1)))(pure3(mkClosure(v)(v1.value0)(v1.value2)));
+        return apply2(map8(VForall.create)($$eval(v)(v1.value1)))(pure3(mkClosure(v)(fromIgnoredName(v1.value0))(v1.value2)));
       }
       ;
       if (v1 instanceof Exists) {
-        return apply2(map8(VExists.create)($$eval(v)(v1.value1)))(pure3(mkClosure(v)(v1.value0)(v1.value2)));
+        return apply2(map8(VExists.create)($$eval(v)(v1.value1)))(pure3(mkClosure(v)(fromIgnoredName(v1.value0))(v1.value2)));
       }
       ;
       if (v1 instanceof IntType) {
@@ -5638,7 +6041,7 @@
   };
   var alphaEquiv = function(t) {
     return function(u) {
-      return eq13(nf(t))(nf(u));
+      return eq12(nf(t))(nf(u));
     };
   };
 
@@ -28082,7 +28485,7 @@
 
   // output/Stratify.TypeChecker.Core/index.js
   var pure7 = /* @__PURE__ */ pure(applicativeEither);
-  var ppr2 = /* @__PURE__ */ ppr(/* @__PURE__ */ pprTerm$prime$prime(isNameName)(hasIxIxName)(isNameIxName)(pprName)(pprIxName));
+  var ppr2 = /* @__PURE__ */ ppr(/* @__PURE__ */ pprTerm$prime$prime(isNameIgnoredName)(hasIxIxName)(isNameIxName)(pprIgnoredName)(pprIxName));
   var bind7 = /* @__PURE__ */ bind(bindEither);
   var lookup2 = /* @__PURE__ */ lookup(hasIxIxName);
   var ppr1 = /* @__PURE__ */ ppr(pprIxName);
@@ -28402,7 +28805,7 @@
   var pure8 = /* @__PURE__ */ pure(applicativeEffect);
   var applyFirst4 = /* @__PURE__ */ applyFirst(applyParserT);
   var show7 = /* @__PURE__ */ show(showParseError);
-  var ppr3 = /* @__PURE__ */ ppr(/* @__PURE__ */ pprTerm$prime$prime(isNameName)(hasIxIxName)(isNameIxName)(pprName)(pprIxName));
+  var ppr3 = /* @__PURE__ */ ppr(/* @__PURE__ */ pprTerm$prime$prime(isNameIgnoredName)(hasIxIxName)(isNameIxName)(pprIgnoredName)(pprIxName));
   var map14 = /* @__PURE__ */ map(functorEffect);
   var bindFlipped4 = /* @__PURE__ */ bindFlipped(bindMaybe);
   var onClick = function(inputArea) {
@@ -28416,6 +28819,7 @@
         if (v instanceof Just) {
           return function __do2() {
             var inputVal = value11(inputArea)();
+            setValue11("")(outputArea)();
             var v1 = runParser(inputVal)(applyFirst4(parseTerm)(eof));
             if (v1 instanceof Left) {
               return setValue11("Parse error: " + show7(v1.value0))(outputArea)();
@@ -28423,6 +28827,7 @@
             ;
             if (v1 instanceof Right) {
               var nameless = fromNamed(v1.value0);
+              setValue11("... Nameless representation: " + ppr3(nameless))(outputArea)();
               var parsedNF = nf(nameless);
               var v2 = inferType(emptyNameEnv)(nameless);
               if (v2 instanceof Left) {
@@ -28433,14 +28838,14 @@
                 return setValue11(ppr3(parsedNF) + ("\n  : " + ppr3(v2.value0)))(outputArea)();
               }
               ;
-              throw new Error("Failed pattern match at Main (line 61, column 11 - line 63, column 97): " + [v2.constructor.name]);
+              throw new Error("Failed pattern match at Main (line 62, column 11 - line 64, column 97): " + [v2.constructor.name]);
             }
             ;
-            throw new Error("Failed pattern match at Main (line 55, column 7 - line 63, column 97): " + [v1.constructor.name]);
+            throw new Error("Failed pattern match at Main (line 56, column 7 - line 64, column 97): " + [v1.constructor.name]);
           };
         }
         ;
-        throw new Error("Failed pattern match at Main (line 51, column 3 - line 63, column 97): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 51, column 3 - line 64, column 97): " + [v.constructor.name]);
       };
     };
   };
@@ -28454,7 +28859,7 @@
         return error2("fromJust: " + v);
       }
       ;
-      throw new Error("Failed pattern match at Main (line 69, column 1 - line 69, column 45): " + [v.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 70, column 1 - line 70, column 45): " + [v.constructor.name, v1.constructor.name]);
     };
   };
   var main = function __do() {
@@ -28465,19 +28870,19 @@
       return bindFlipped4(fromElement)(v);
     })(getElementById("runButton")(rootNode))();
     var inputArea = map14(function() {
-      var $35 = fromJust5("inputArea");
-      return function($36) {
-        return $35(function(v) {
-          return bindFlipped4(fromElement2)(v);
-        }($36));
-      };
-    }())(getElementById("inputArea")(rootNode))();
-    var outputArea = map14(function() {
-      var $37 = fromJust5("outputArea");
+      var $37 = fromJust5("inputArea");
       return function($38) {
         return $37(function(v) {
           return bindFlipped4(fromElement2)(v);
         }($38));
+      };
+    }())(getElementById("inputArea")(rootNode))();
+    var outputArea = map14(function() {
+      var $39 = fromJust5("outputArea");
+      return function($40) {
+        return $39(function(v) {
+          return bindFlipped4(fromElement2)(v);
+        }($40));
       };
     }())(getElementById("outputArea")(rootNode))();
     if (runBtn instanceof Nothing) {

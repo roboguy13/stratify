@@ -37,7 +37,7 @@ checkType ctx x ty = do
   xTy <- inferType ctx x
   requireSameType ty xTy
 
-isForall :: Type -> TypeCheck (Name /\ Type /\ Type)
+isForall :: Type -> TypeCheck (IgnoredName /\ Type /\ Type)
 isForall (Forall x src tgt) = pure $ Tuple x (Tuple src tgt)
 isForall ty = typeError $ "Expected forall type, got " <> ppr ty
 
@@ -107,7 +107,7 @@ checkBinOp ctx x y xTy yTy = do
   checkType ctx x xTy
   checkType ctx y yTy
 
-inferForall :: Context -> Term -> TypeCheck (Name /\ Type /\ Type)
+inferForall :: Context -> Term -> TypeCheck (IgnoredName /\ Type /\ Type)
 inferForall ctx x = do
   ty <- inferType ctx x
   case nf ty of
