@@ -85,6 +85,20 @@ textarea {
   white-space: pre;
 }
 
+#replInput {
+  border: none;              /* Remove border */
+  outline: none;              /* Remove outline */
+  background: transparent;    /* Make background transparent */
+  width: 100%;                /* Take full width */
+  font-size: inherit;         /* Use the same font size as parent */
+  font-family: inherit;       /* Use the same font family as parent */
+  color: inherit;             /* Use the same text color as parent */
+  padding: 0;                 /* Remove padding */
+  margin: 0;                  /* Remove margin */
+  /* width: 100%;
+  font-family: monospace, monospace; */
+}
+
 #panels {
   display: flex;
   justify-content: space-between;
