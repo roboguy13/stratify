@@ -1,57 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Modern Minimalist Browser REPL</title>
-  <style>
-    body {
-      font-family: 'Helvetica Neue', sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f4f4f4;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    #container {
-      background: #fff;
-      padding: 25px;
-      width: 400px;
-      border-radius: 8px;
-      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    }
-    h1 {
-      color: #333;
-      margin-bottom: 20px;
-    }
-    textarea {
-      width: 100%;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      margin-top: 10px;
-      padding: 12px;
-      box-sizing: border-box;
-      resize: vertical;
-    }
-    #runButton {
-      background-color: #4CAF50;
-      color: white;
-      padding: 14px 20px;
-      margin-top: 15px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      width: 100%;
-    }
-    #runButton:hover {
-      background-color: #45a049;
-    }
-  </style>
+  <title>Stratify</title>
+  <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
   <div id="container">
     <h1 align="center">Stratify</h1>
-    <textarea id="inputArea" rows="4" placeholder="Type your command here..."></textarea>
+    <div id="panels">
+      <div id="definitionsPanel">
+        <h2 align="center">Definitions</h2>
+        <textarea id="definitionsArea" rows="6" placeholder="Type your definitions here..."></textarea>
+      </div>
+      <div id="replPanel">
+        <h2 align="center">REPL</h2>
+        <div id="terminal">
+          <div class="line" id="line1">
+            <span id="promptSpan" class="prompt">>>&nbsp;</span>
+            <span id="replInput" class="input" contenteditable="true"></span>
+          </div>
+        </div>
+      </div>
+    </div>
     <button id="runButton">Run</button>
     <textarea id="outputArea" rows="4" readonly placeholder="Output will appear here..."></textarea>
   </div>
