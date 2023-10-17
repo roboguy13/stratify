@@ -12,7 +12,8 @@ to generate this file without the comments in this block.
 -}
 { name = "my-project"
 , dependencies =
-  [ "arrays"
+  [ "aff"
+  , "arrays"
   , "bifunctors"
   , "bound"
   , "console"
@@ -22,6 +23,7 @@ to generate this file without the comments in this block.
   , "either"
   , "exceptions"
   , "foldable-traversable"
+  , "halogen"
   , "identity"
   , "integers"
   , "invariant"
