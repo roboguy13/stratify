@@ -11,7 +11,9 @@ body {
 #panels {
   background: #fff;
   padding: 25px;
-  width: 800px;
+  /* width: 800px; */
+  width: 80vw;
+  height: 70vh;
   border-radius: 8px;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
 }
@@ -50,7 +52,7 @@ textarea {
   border: 1px solid #ccc;
   padding: 10px;
   border-radius: 4px;
-  max-height: 200px;
+  /* max-height: 200px; */
   overflow-y: auto;
 }
 
@@ -79,10 +81,12 @@ textarea {
 #terminal {
   margin-top: 0;
   overflow-y: auto;  /* Adds scrolling */
-  height: 200px;  /* Sets the initial height */
+  /* height: 200px; */ /* Sets the initial height */
+  height: 65vh;
   box-sizing: border-box;
   font-family: monospace, monospace;
   white-space: pre;
+  overflow-x: hidden;
 }
 
 #replInput {
@@ -95,6 +99,7 @@ textarea {
   color: inherit;             /* Use the same text color as parent */
   padding: 0;                 /* Remove padding */
   margin: 0;                  /* Remove margin */
+  overflow-x: auto;
   /* width: 100%;
   font-family: monospace, monospace; */
 }
