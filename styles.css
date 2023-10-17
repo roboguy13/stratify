@@ -8,10 +8,10 @@ body {
   align-items: center;
   height: 100vh;
 }
-#container {
+#panels {
   background: #fff;
   padding: 25px;
-  width: 400px;
+  width: 800px;
   border-radius: 8px;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
 }
@@ -81,6 +81,8 @@ textarea {
   overflow-y: auto;  /* Adds scrolling */
   height: 200px;  /* Sets the initial height */
   box-sizing: border-box;
+  font-family: monospace, monospace;
+  white-space: pre;
 }
 
 #panels {
@@ -97,6 +99,14 @@ textarea {
 h2 {
   margin-top: 0;
   padding-top: 0;
+}
+
+.panelHeader {
+  text-align: center;
+}
+
+.toolHeader {
+  text-align: center;
 }
 
 

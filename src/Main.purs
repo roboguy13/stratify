@@ -20,6 +20,8 @@ import Web.UIEvent.KeyboardEvent as KE
 import Web.UIEvent.KeyboardEvent.EventTypes as KET
 import Web.HTML.HTMLElement as HTMLElement
 import Web.DOM.Node as Node
+import Web.DOM.Node (Node)
+import Web.DOM.NodeList as NodeList
 
 import Data.Maybe
 import Data.List
@@ -37,6 +39,8 @@ import Stratify.TypeChecker.Core
 import Parsing (runParser)
 import Parsing.String (eof)
 
+import Debug
+
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
@@ -44,7 +48,7 @@ main = HA.runHalogenAff do
 
 type ReplState = { input :: String, history :: Array String, message :: String }
 
-data Action = UpdateInput | ExecuteCommand
+data Action = Nop | UpdateInput String | ExecuteCommand
 
 initialState :: ReplState
 initialState = { input: "", history: [], message: "" }
@@ -65,10 +69,12 @@ prompt = ">> "
 render :: forall m. MonadAff m => ReplState -> H.ComponentHTML Action () m
 render st = 
   HH.div_
-    [ HH.h1 [ ] [ HH.text "Stratify" ]
+    [ HH.h1 [ HP.class_ (HH.ClassName "toolHeader") ]
+            [ HH.text "Stratify" ]
     , HH.div [ HP.id "panels" ]
         [HH.div [ HP.id "definitionsPanel" ]
-          [ HH.h2_ [ HH.text "Definitions" ]
+          [ HH.h2 [ HP.class_ (HH.ClassName "panelHeader") ]
+                  [ HH.text "Definitions" ]
           , HH.textarea
               [ HP.id "definitionsArea"
               , HP.rows 10
@@ -77,7 +83,8 @@ render st =
           ]
 
         , HH.div [ HP.id "replPanel" ]
-            [ HH.h2_ [ HH.text "REPL" ]
+            [ HH.h2 [ HP.class_ (HH.ClassName "panelHeader") ]
+                    [ HH.text "REPL" ]
             , HH.div [ HP.id "terminal" ]
                 (historyToHtml st
                 <>
@@ -87,13 +94,29 @@ render st =
                     [ HH.span [ HP.id "promptSpan"
                               , HP.class_ (HH.ClassName "prompt") ]
                         [ HH.text prompt ]
-                    , HH.span [ HP.id "replInput"
-                              , HP.class_ (HH.ClassName "input")
-                              , HP.attr (HH.AttrName "contenteditable") "true"
-                              , HE.onKeyDown mkAction
-                              , HP.ref replInputRef
-                              ]
-                        []
+                    -- , HH.textarea
+                    --            [ HP.id "replInput"
+                    --            , HP.class_ (HH.ClassName "input")
+                    --           --  , HP.attr (HH.AttrName "contenteditable") "true"
+                    --            , HE.onKeyDown mkAction
+                    --            , HP.ref replInputRef
+                    --            ]
+
+                    , HH.input [ HP.id "replInput"
+                               , HP.type_ HP.InputText
+                               , HP.class_ (HH.ClassName "input")
+                              --  , HP.attr (HH.AttrName "contenteditable") "true"
+                               , HE.onKeyDown mkAction
+                               , HP.ref replInputRef
+                               , HE.onValueInput updateInput
+                               ]
+                    -- , HH.span [ HP.id "replInput"
+                    --           , HP.class_ (HH.ClassName "input")
+                    --           , HP.attr (HH.AttrName "contenteditable") "true"
+                    --           , HE.onKeyDown mkAction
+                    --           , HP.ref replInputRef
+                    --           ]
+                    --     []
                     ]
                 ])
             ]
@@ -111,6 +134,9 @@ historyToHtml st =
   in
   Array.intersperse HH.br_ $ map HH.text texts
 
+updateInput :: String -> Action
+updateInput x = trace ("updateInput: " <> show x) \_ -> UpdateInput x
+
 unlines :: Array String -> String
 unlines = foldr go ""
   where
@@ -124,11 +150,14 @@ mkAction :: KeyboardEvent -> Action
 mkAction ev =
   if KE.key ev == "Enter"
   then ExecuteCommand
-  else UpdateInput
+  else Nop
 
 handleAction :: forall o m. MonadAff m => Action -> H.HalogenM ReplState Action () o m Unit
 handleAction = case _ of
-  UpdateInput -> do pure unit
+  Nop -> pure unit
+  UpdateInput str -> do
+    traceM $ "updating input to " <> show str
+    H.modify_ \st -> st { input = str }
     -- H.getHTMLElementRef replInputRef >>= traverse_ \el -> do
     --   str <- H.liftEffect $ Node.textContent (HTMLElement.toNode el)
     --   st <- H.get
@@ -137,21 +166,22 @@ handleAction = case _ of
     --     , input = str
     --     }
   ExecuteCommand  -> do
-    H.getHTMLElementRef replInputRef >>= traverse_ \el -> do
-      str <- H.liftEffect $ Node.textContent (HTMLElement.toNode el)
-      st <- H.get
-      H.put $ st
-        { history = st.history <> [prompt <> str]
-        , input = str
-        }
-      H.liftEffect $ Node.setTextContent "" (HTMLElement.toNode el)
+    -- H.getHTMLElementRef replInputRef >>= traverse_ \el -> do
+    --   str <- H.liftEffect $ Node.textContent (HTMLElement.toNode el)
+    --   st <- H.get
+    --   H.put $ st
+    --     { history = st.history <> [prompt <> str]
+    --     , input = str
+    --     }
+    --   H.liftEffect $ Node.setTextContent "" (HTMLElement.toNode el)
     st <- H.get
     H.liftEffect $ log $ "history = " <> show st.history
     -- Evaluate st.input and get the output, here assumed to be st.input for simplicity.
-    let output = st.input
     -- log $ "inputVal = " <> inputVal
     let parserResult = runParser st.input (parseTerm <* eof)
-    H.modify_ \st -> st { input = "" }
+    traceM $ "Input is " <> show st.input
+    H.modify_ \st -> st { history = st.history <> [prompt <> st.input] }
+    -- H.modify_ \st -> st { input = "" }
     case parserResult of
       Left e -> updateTerminal ("Parse error: " <> show e)
       Right parsed -> do
@@ -160,14 +190,22 @@ handleAction = case _ of
         let parsedNF = nf nameless
         case inferType emptyNameEnv nameless of
           Left e -> updateTerminal ("Type error: " <> e)
-          Right ty -> updateTerminal (ppr parsedNF <> "\n  : " <> ppr ty)
-    H.getHTMLElementRef replInputRef >>= traverse_ \el ->
+          Right ty -> do
+            updateTerminal (ppr parsedNF)
+            updateTerminal ("  : " <> ppr ty)
+    H.getHTMLElementRef replInputRef >>= traverse_ \el -> do
       H.liftEffect $ HTMLElement.focus el
+      H.liftEffect $ removeChildren (HTMLElement.toNode el)
     -- H.modify_ \st -> st { history = Array.snoc st.history output, input = "" }
 
 updateTerminal :: forall o m. MonadAff m => String -> H.HalogenM ReplState Action () o m Unit
 updateTerminal resultMsg =
   H.modify_ $ \st -> st { history = st.history <> [resultMsg], message = resultMsg }
+
+removeChildren :: Node -> Effect Unit
+removeChildren parent = do
+  children <- NodeList.toArray =<< Node.childNodes parent
+  for_ children \nodeToRemove -> Node.removeChild nodeToRemove parent
 
 -- import Stratify.Utils
 
