@@ -3962,6 +3962,7 @@
 
   // output/Web.HTML.HTMLElement/index.js
   var toNode = unsafeCoerce2;
+  var toElement = unsafeCoerce2;
   var fromElement = function(x) {
     return _read(Nothing.value, Just.create, x);
   };
@@ -5155,6 +5156,13 @@
   var _prefix = getProp("prefix");
   var localName = getProp("localName");
   var tagName = getProp("tagName");
+  function setScrollLeft(scrollLeft2) {
+    return function(node) {
+      return function() {
+        node.scrollLeft = scrollLeft2;
+      };
+    };
+  }
 
   // output/Web.DOM.Element/index.js
   var toNode2 = unsafeCoerce2;
@@ -34640,13 +34648,6 @@
     };
   };
 
-  // output/Web.DOM.NodeList/foreign.js
-  function toArray(list) {
-    return function() {
-      return [].slice.call(list);
-    };
-  }
-
   // output/Web.UIEvent.KeyboardEvent/foreign.js
   function key(e) {
     return e.key;
@@ -34657,8 +34658,6 @@
   var append9 = /* @__PURE__ */ append(semigroupArray);
   var trace2 = /* @__PURE__ */ trace();
   var show7 = /* @__PURE__ */ show(showString);
-  var bindFlipped11 = /* @__PURE__ */ bindFlipped(bindEffect);
-  var for_3 = /* @__PURE__ */ for_(applicativeEffect)(foldableArray);
   var map31 = /* @__PURE__ */ map(functorArray);
   var type_19 = /* @__PURE__ */ type_18(isPropInputType);
   var pure17 = /* @__PURE__ */ pure(applicativeHalogenM);
@@ -34717,15 +34716,8 @@
       return new UpdateInput(x);
     });
   };
+  var terminalRef = "terminalRef";
   var replInputRef = "replInput";
-  var removeChildren = function(parent2) {
-    return function __do2() {
-      var children2 = bindFlipped11(toArray)(childNodes(parent2))();
-      return for_3(children2)(function(nodeToRemove) {
-        return removeChild2(nodeToRemove)(parent2);
-      })();
-    };
-  };
   var prompt = ">> ";
   var mkAction = function(ev) {
     var $56 = key(ev) === "Enter";
@@ -34745,7 +34737,7 @@
   };
   var render2 = function(dictMonadAff) {
     return function(st) {
-      return div_([h1([class_("toolHeader")])([text5("Stratify")]), div2([id2("panels")])([div2([id2("definitionsPanel")])([h2([class_("panelHeader")])([text5("Definitions")]), textarea([id2("definitionsArea"), rows4(10), placeholder3("Type your definitions here")])]), div2([id2("replPanel")])([h2([class_("panelHeader")])([text5("REPL")]), div2([id2("terminal")])(append9(historyToHtml(st))([div2([class_("line"), id2("line1")])([span3([id2("promptSpan"), class_("prompt")])([text5(prompt)]), input2([id2("replInput"), type_19(InputText.value), class_("input"), onKeyDown(mkAction), ref2(replInputRef), onValueInput(updateInput)])])]))])])]);
+      return div_([h1([class_("toolHeader")])([text5("Stratify")]), div2([id2("panels")])([div2([id2("definitionsPanel")])([h2([class_("panelHeader")])([text5("Definitions")]), textarea([id2("definitionsArea"), rows4(10), placeholder3("Type your definitions here")])]), div2([id2("replPanel")])([h2([class_("panelHeader")])([text5("REPL")]), div2([id2("terminal"), ref2(terminalRef)])(append9(historyToHtml(st))([div2([class_("line"), id2("line1")])([span3([id2("promptSpan"), class_("prompt")])([text5(prompt)]), input2([id2("replInput"), type_19(InputText.value), class_("input"), onKeyDown(mkAction), ref2(replInputRef), onValueInput(updateInput)])])]))])])]);
     };
   };
   var handleAction = function(dictMonadAff) {
@@ -34809,16 +34801,18 @@
                       });
                     }
                     ;
-                    throw new Error("Failed pattern match at Main (line 191, column 9 - line 195, column 46): " + [v1.constructor.name]);
+                    throw new Error("Failed pattern match at Main (line 195, column 9 - line 199, column 46): " + [v1.constructor.name]);
                   }
                   ;
-                  throw new Error("Failed pattern match at Main (line 185, column 5 - line 195, column 46): " + [parserResult.constructor.name]);
+                  throw new Error("Failed pattern match at Main (line 189, column 5 - line 199, column 46): " + [parserResult.constructor.name]);
                 }())(function() {
-                  return bind16(getHTMLElementRef(replInputRef))(traverse_7(function(el) {
-                    return discard7(liftEffect7(focus(el)))(function() {
-                      return liftEffect7(removeChildren(toNode(el)));
-                    });
-                  }));
+                  return discard7(bind16(getHTMLElementRef(replInputRef))(traverse_7(function(el) {
+                    return liftEffect7(focus(el));
+                  })))(function() {
+                    return bind16(getHTMLElementRef(terminalRef))(traverse_7(function(el) {
+                      return liftEffect7(setScrollLeft(0)(toElement(el)));
+                    }));
+                  });
                 });
               });
             });
@@ -34826,7 +34820,7 @@
         });
       }
       ;
-      throw new Error("Failed pattern match at Main (line 156, column 16 - line 198, column 60): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 160, column 16 - line 203, column 74): " + [v.constructor.name]);
     };
   };
   var replComponent = function(dictMonadAff) {

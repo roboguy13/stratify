@@ -20,6 +20,7 @@ import Web.UIEvent.KeyboardEvent as KE
 import Web.UIEvent.KeyboardEvent.EventTypes as KET
 import Web.HTML.HTMLElement as HTMLElement
 import Web.DOM.Node as Node
+import Web.DOM.Element as Element
 import Web.DOM.Node (Node)
 import Web.DOM.NodeList as NodeList
 
@@ -63,6 +64,9 @@ replComponent = H.mkComponent
 replInputRef :: H.RefLabel
 replInputRef = H.RefLabel "replInput"
 
+terminalRef :: H.RefLabel
+terminalRef = H.RefLabel "terminalRef"
+
 prompt :: String
 prompt = ">> "
 
@@ -85,7 +89,7 @@ render st =
         , HH.div [ HP.id "replPanel" ]
             [ HH.h2 [ HP.class_ (HH.ClassName "panelHeader") ]
                     [ HH.text "REPL" ]
-            , HH.div [ HP.id "terminal" ]
+            , HH.div [ HP.id "terminal", HP.ref terminalRef ]
                 (historyToHtml st
                 <>
                 [ HH.div [ HP.class_ (HH.ClassName "line")
@@ -193,14 +197,18 @@ handleAction = case _ of
           Right ty -> do
             updateTerminal (ppr parsedNF)
             updateTerminal ("  : " <> ppr ty)
-    H.getHTMLElementRef replInputRef >>= traverse_ \el -> do
+    H.getHTMLElementRef replInputRef >>= traverse_ \el ->
       H.liftEffect $ HTMLElement.focus el
-      H.liftEffect $ removeChildren (HTMLElement.toNode el)
+    H.getHTMLElementRef terminalRef >>= traverse_ \el ->
+      H.liftEffect $ Element.setScrollLeft 0.0 (HTMLElement.toElement el)
+    --   H.liftEffect $ removeChildren (HTMLElement.toNode el)
     -- H.modify_ \st -> st { history = Array.snoc st.history output, input = "" }
 
 updateTerminal :: forall o m. MonadAff m => String -> H.HalogenM ReplState Action () o m Unit
-updateTerminal resultMsg =
+updateTerminal resultMsg = do
   H.modify_ $ \st -> st { history = st.history <> [resultMsg], message = resultMsg }
+  -- H.getHTMLElementRef replInputRef >>= traverse_ \el ->
+  --   H.liftEffect $ Element.setScrollLeft 0.0 (HTMLElement.toElement el)
 
 removeChildren :: Node -> Effect Unit
 removeChildren parent = do
