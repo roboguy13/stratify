@@ -7233,12 +7233,16 @@
   // output/Web.UIEvent.KeyboardEvent.EventTypes/index.js
   var keydown = "keydown";
 
+  // output/Web.UIEvent.MouseEvent.EventTypes/index.js
+  var click2 = "click";
+
   // output/Halogen.HTML.Events/index.js
   var map14 = /* @__PURE__ */ map(functorMaybe);
   var composeKleisli2 = /* @__PURE__ */ composeKleisli(bindMaybe);
   var composeKleisliFlipped3 = /* @__PURE__ */ composeKleisliFlipped(/* @__PURE__ */ bindExceptT(monadIdentity));
   var readProp2 = /* @__PURE__ */ readProp(monadIdentity);
   var readString2 = /* @__PURE__ */ readString(monadIdentity);
+  var mouseHandler = unsafeCoerce2;
   var keyHandler = unsafeCoerce2;
   var handler$prime = function(et) {
     return function(f) {
@@ -7254,6 +7258,12 @@
       });
     };
   };
+  var onClick = /* @__PURE__ */ function() {
+    var $15 = handler2(click2);
+    return function($16) {
+      return $15(mouseHandler($16));
+    };
+  }();
   var onKeyDown = /* @__PURE__ */ function() {
     var $23 = handler2(keydown);
     return function($24) {
@@ -34658,24 +34668,31 @@
   var append9 = /* @__PURE__ */ append(semigroupArray);
   var trace2 = /* @__PURE__ */ trace();
   var show7 = /* @__PURE__ */ show(showString);
+  var discard7 = /* @__PURE__ */ discard(discardUnit)(bindHalogenM);
+  var bind16 = /* @__PURE__ */ bind(bindHalogenM);
+  var traverse_7 = /* @__PURE__ */ traverse_(applicativeHalogenM)(foldableMaybe);
   var map31 = /* @__PURE__ */ map(functorArray);
   var type_19 = /* @__PURE__ */ type_18(isPropInputType);
   var pure17 = /* @__PURE__ */ pure(applicativeHalogenM);
-  var discard7 = /* @__PURE__ */ discard(discardUnit)(bindHalogenM);
   var traceM2 = /* @__PURE__ */ traceM()(monadHalogenM);
-  var bind16 = /* @__PURE__ */ bind(bindHalogenM);
   var get2 = /* @__PURE__ */ get(monadStateHalogenM);
   var show16 = /* @__PURE__ */ show(/* @__PURE__ */ showArray(showString));
   var applyFirst4 = /* @__PURE__ */ applyFirst(applyParserT);
   var show24 = /* @__PURE__ */ show(showParseError);
   var ppr3 = /* @__PURE__ */ ppr(/* @__PURE__ */ pprTerm$prime$prime(isNameIgnoredName)(hasIxIxName)(isNameIxName)(pprIgnoredName)(pprIxName));
-  var traverse_7 = /* @__PURE__ */ traverse_(applicativeHalogenM)(foldableMaybe);
   var Nop = /* @__PURE__ */ function() {
     function Nop2() {
     }
     ;
     Nop2.value = new Nop2();
     return Nop2;
+  }();
+  var Focus = /* @__PURE__ */ function() {
+    function Focus2() {
+    }
+    ;
+    Focus2.value = new Focus2();
+    return Focus2;
   }();
   var UpdateInput = /* @__PURE__ */ function() {
     function UpdateInput2(value0) {
@@ -34697,17 +34714,17 @@
   var updateTerminal = function(dictMonadAff) {
     return function(resultMsg) {
       return modify_3(function(st) {
-        var $52 = {};
-        for (var $53 in st) {
-          if ({}.hasOwnProperty.call(st, $53)) {
-            $52[$53] = st[$53];
+        var $58 = {};
+        for (var $59 in st) {
+          if ({}.hasOwnProperty.call(st, $59)) {
+            $58[$59] = st[$59];
           }
           ;
         }
         ;
-        $52.history = append9(st.history)([resultMsg]);
-        $52.message = resultMsg;
-        return $52;
+        $58.history = append9(st.history)([resultMsg]);
+        $58.message = resultMsg;
+        return $58;
       });
     };
   };
@@ -34718,10 +34735,20 @@
   };
   var terminalRef = "terminalRef";
   var replInputRef = "replInput";
+  var refocus = function(dictMonadAff) {
+    var liftEffect7 = liftEffect(monadEffectHalogenM(dictMonadAff.MonadEffect0()));
+    return discard7(bind16(getHTMLElementRef(replInputRef))(traverse_7(function(el) {
+      return liftEffect7(focus(el));
+    })))(function() {
+      return bind16(getHTMLElementRef(terminalRef))(traverse_7(function(el) {
+        return liftEffect7(setScrollLeft(0)(toElement(el)));
+      }));
+    });
+  };
   var prompt = ">> ";
   var mkAction = function(ev) {
-    var $56 = key(ev) === "Enter";
-    if ($56) {
+    var $62 = key(ev) === "Enter";
+    if ($62) {
       return ExecuteCommand.value;
     }
     ;
@@ -34737,10 +34764,13 @@
   };
   var render2 = function(dictMonadAff) {
     return function(st) {
-      return div_([h1([class_("toolHeader")])([text5("Stratify")]), div2([id2("panels")])([div2([id2("definitionsPanel")])([h2([class_("panelHeader")])([text5("Definitions")]), textarea([id2("definitionsArea"), rows4(10), placeholder3("Type your definitions here")])]), div2([id2("replPanel")])([h2([class_("panelHeader")])([text5("REPL")]), div2([id2("terminal"), ref2(terminalRef)])(append9(historyToHtml(st))([div2([class_("line"), id2("line1")])([span3([id2("promptSpan"), class_("prompt")])([text5(prompt)]), input2([id2("replInput"), type_19(InputText.value), class_("input"), onKeyDown(mkAction), ref2(replInputRef), onValueInput(updateInput)])])]))])])]);
+      return div_([h1([class_("toolHeader")])([text5("Stratify")]), div2([id2("panels")])([div2([id2("definitionsPanel")])([h2([class_("panelHeader")])([text5("Definitions")]), textarea([id2("definitionsArea"), rows4(10), placeholder3("Type your definitions here")])]), div2([id2("replPanel")])([h2([class_("panelHeader")])([text5("REPL")]), div2([id2("terminal"), ref2(terminalRef), onClick(function(v) {
+        return Focus.value;
+      })])(append9(historyToHtml(st))([div2([class_("line"), id2("line1")])([span3([id2("promptSpan"), class_("prompt")])([text5(prompt)]), input2([id2("replInput"), type_19(InputText.value), class_("input"), onKeyDown(mkAction), ref2(replInputRef), onValueInput(updateInput)])])]))])])]);
     };
   };
   var handleAction = function(dictMonadAff) {
+    var refocus1 = refocus(dictMonadAff);
     var liftEffect7 = liftEffect(monadEffectHalogenM(dictMonadAff.MonadEffect0()));
     var updateTerminal1 = updateTerminal(dictMonadAff);
     return function(v) {
@@ -34748,19 +34778,23 @@
         return pure17(unit);
       }
       ;
+      if (v instanceof Focus) {
+        return refocus1;
+      }
+      ;
       if (v instanceof UpdateInput) {
         return discard7(traceM2("updating input to " + show7(v.value0)))(function() {
           return modify_3(function(st) {
-            var $58 = {};
-            for (var $59 in st) {
-              if ({}.hasOwnProperty.call(st, $59)) {
-                $58[$59] = st[$59];
+            var $64 = {};
+            for (var $65 in st) {
+              if ({}.hasOwnProperty.call(st, $65)) {
+                $64[$65] = st[$65];
               }
               ;
             }
             ;
-            $58.input = v.value0;
-            return $58;
+            $64.input = v.value0;
+            return $64;
           });
         });
       }
@@ -34771,16 +34805,16 @@
             var parserResult = runParser(st.input)(applyFirst4(parseTerm)(eof));
             return discard7(traceM2("Input is " + show7(st.input)))(function() {
               return discard7(modify_3(function(st1) {
-                var $62 = {};
-                for (var $63 in st1) {
-                  if ({}.hasOwnProperty.call(st1, $63)) {
-                    $62[$63] = st1[$63];
+                var $68 = {};
+                for (var $69 in st1) {
+                  if ({}.hasOwnProperty.call(st1, $69)) {
+                    $68[$69] = st1[$69];
                   }
                   ;
                 }
                 ;
-                $62.history = append9(st1.history)([prompt + st1.input]);
-                return $62;
+                $68.history = append9(st1.history)([prompt + st1.input]);
+                return $68;
               }))(function() {
                 return discard7(function() {
                   if (parserResult instanceof Left) {
@@ -34801,18 +34835,12 @@
                       });
                     }
                     ;
-                    throw new Error("Failed pattern match at Main (line 195, column 9 - line 199, column 46): " + [v1.constructor.name]);
+                    throw new Error("Failed pattern match at Main (line 198, column 9 - line 202, column 46): " + [v1.constructor.name]);
                   }
                   ;
-                  throw new Error("Failed pattern match at Main (line 189, column 5 - line 199, column 46): " + [parserResult.constructor.name]);
+                  throw new Error("Failed pattern match at Main (line 192, column 5 - line 202, column 46): " + [parserResult.constructor.name]);
                 }())(function() {
-                  return discard7(bind16(getHTMLElementRef(replInputRef))(traverse_7(function(el) {
-                    return liftEffect7(focus(el));
-                  })))(function() {
-                    return bind16(getHTMLElementRef(terminalRef))(traverse_7(function(el) {
-                      return liftEffect7(setScrollLeft(0)(toElement(el)));
-                    }));
-                  });
+                  return refocus1;
                 });
               });
             });
@@ -34820,7 +34848,7 @@
         });
       }
       ;
-      throw new Error("Failed pattern match at Main (line 160, column 16 - line 203, column 74): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 162, column 16 - line 203, column 12): " + [v.constructor.name]);
     };
   };
   var replComponent = function(dictMonadAff) {
@@ -34832,9 +34860,9 @@
       "eval": mkEval({
         handleQuery: defaultEval.handleQuery,
         receive: defaultEval.receive,
-        initialize: defaultEval.initialize,
         finalize: defaultEval.finalize,
-        handleAction: handleAction(dictMonadAff)
+        handleAction: handleAction(dictMonadAff),
+        initialize: new Just(Focus.value)
       })
     });
   };

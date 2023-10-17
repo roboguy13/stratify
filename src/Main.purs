@@ -49,7 +49,7 @@ main = HA.runHalogenAff do
 
 type ReplState = { input :: String, history :: Array String, message :: String }
 
-data Action = Nop | UpdateInput String | ExecuteCommand
+data Action = Nop | Focus | UpdateInput String | ExecuteCommand
 
 initialState :: ReplState
 initialState = { input: "", history: [], message: "" }
@@ -58,7 +58,7 @@ replComponent :: forall query input output m. MonadAff m => H.Component query in
 replComponent = H.mkComponent
   { initialState: \_ -> initialState
   , render
-  , eval: H.mkEval H.defaultEval { handleAction = handleAction }
+  , eval: H.mkEval H.defaultEval { handleAction = handleAction, initialize = Just Focus }
   }
 
 replInputRef :: H.RefLabel
@@ -89,7 +89,9 @@ render st =
         , HH.div [ HP.id "replPanel" ]
             [ HH.h2 [ HP.class_ (HH.ClassName "panelHeader") ]
                     [ HH.text "REPL" ]
-            , HH.div [ HP.id "terminal", HP.ref terminalRef ]
+            , HH.div [ HP.id "terminal", HP.ref terminalRef
+                     , HE.onClick (\_ -> Focus)
+                     ]
                 (historyToHtml st
                 <>
                 [ HH.div [ HP.class_ (HH.ClassName "line")
@@ -159,6 +161,7 @@ mkAction ev =
 handleAction :: forall o m. MonadAff m => Action -> H.HalogenM ReplState Action () o m Unit
 handleAction = case _ of
   Nop -> pure unit
+  Focus -> refocus
   UpdateInput str -> do
     traceM $ "updating input to " <> show str
     H.modify_ \st -> st { input = str }
@@ -197,12 +200,16 @@ handleAction = case _ of
           Right ty -> do
             updateTerminal (ppr parsedNF)
             updateTerminal ("  : " <> ppr ty)
-    H.getHTMLElementRef replInputRef >>= traverse_ \el ->
-      H.liftEffect $ HTMLElement.focus el
-    H.getHTMLElementRef terminalRef >>= traverse_ \el ->
-      H.liftEffect $ Element.setScrollLeft 0.0 (HTMLElement.toElement el)
+    refocus
     --   H.liftEffect $ removeChildren (HTMLElement.toNode el)
     -- H.modify_ \st -> st { history = Array.snoc st.history output, input = "" }
+
+refocus :: forall o m. MonadAff m => H.HalogenM ReplState Action () o m Unit
+refocus = do
+  H.getHTMLElementRef replInputRef >>= traverse_ \el ->
+    H.liftEffect $ HTMLElement.focus el
+  H.getHTMLElementRef terminalRef >>= traverse_ \el ->
+    H.liftEffect $ Element.setScrollLeft 0.0 (HTMLElement.toElement el)
 
 updateTerminal :: forall o m. MonadAff m => String -> H.HalogenM ReplState Action () o m Unit
 updateTerminal resultMsg = do
