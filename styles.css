@@ -63,19 +63,6 @@ textarea {
 .input {
   color: black;
 }
-/* Existing CSS remains the same */
-/* Add the following new styles */
-
-/* #panels { */
-/*   display: flex; */
-/*   justify-content: space-between; */
-/*   align-items: flex-start; */
-/* } */
-
-/* #definitionsPanel, */
-/* #replPanel { */
-/*   flex-basis: 48%; */
-/* } */
 
 #definitionsArea,
 #terminal {
